@@ -22,9 +22,7 @@
       --border: rgba(255,255,255,0.06);
       --radius: 12px;
     }
-
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
       background: var(--bg-primary);
@@ -35,372 +33,140 @@
 
     /* ─── Login Screen ─── */
     #login-screen {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center; min-height: 100vh;
       background: radial-gradient(ellipse at 50% 0%, rgba(108,92,231,0.15) 0%, transparent 60%);
     }
-
     .login-box {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 48px;
-      width: 380px;
-      text-align: center;
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px;
+      padding: 48px; width: 380px; text-align: center;
     }
-
     .login-box h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
     .login-box p { color: var(--text-secondary); margin-bottom: 32px; }
+    .error-msg { color: var(--red); font-size: 13px; margin-top: 8px; display: none; }
 
-    .input-group {
-      position: relative;
-      margin-bottom: 16px;
-    }
-
-    .input-group input {
-      width: 100%;
-      padding: 14px 16px;
-      background: var(--bg-primary);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      color: var(--text-primary);
-      font-family: inherit;
-      font-size: 14px;
-      transition: border-color 0.2s;
-    }
-
-    .input-group input:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-glow);
-    }
-
+    /* ─── Buttons ─── */
     .btn {
-      padding: 12px 24px;
-      border-radius: 10px;
-      border: none;
-      font-family: inherit;
-      font-weight: 600;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.2s;
+      padding: 12px 24px; border-radius: 10px; border: none; font-family: inherit;
+      font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;
     }
-
-    .btn-primary {
-      background: var(--accent);
-      color: white;
-      width: 100%;
-    }
-
-    .btn-primary:hover {
-      background: var(--accent-light);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 20px var(--accent-glow);
-    }
-
-    .btn-ghost {
-      background: transparent;
-      color: var(--text-secondary);
-      border: 1px solid var(--border);
-    }
-
-    .btn-ghost:hover {
-      background: var(--bg-hover);
-      color: var(--text-primary);
-    }
-
+    .btn-primary { background: var(--accent); color: white; width: 100%; }
+    .btn-primary:hover { background: var(--accent-light); transform: translateY(-1px); box-shadow: 0 4px 20px var(--accent-glow); }
+    .btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--bg-hover); color: var(--text-primary); }
     .btn-danger { background: var(--red); color: white; }
     .btn-danger:hover { opacity: 0.9; }
-
-    .error-msg {
-      color: var(--red);
-      font-size: 13px;
-      margin-top: 8px;
-      display: none;
-    }
+    .btn-sm { padding: 6px 14px; font-size: 12px; }
 
     /* ─── App Layout ─── */
     #app { display: none; }
-
     .sidebar {
-      position: fixed;
-      left: 0;
-      top: 0;
-      width: 240px;
-      height: 100vh;
-      background: var(--bg-secondary);
-      border-right: 1px solid var(--border);
-      padding: 24px 16px;
-      display: flex;
-      flex-direction: column;
-      z-index: 100;
+      position: fixed; left: 0; top: 0; width: 250px; height: 100vh;
+      background: var(--bg-secondary); border-right: 1px solid var(--border);
+      padding: 20px 14px; display: flex; flex-direction: column; z-index: 100;
+      overflow-y: auto;
     }
+    .sidebar-brand { display: flex; align-items: center; gap: 12px; padding: 0 8px; margin-bottom: 20px; }
+    .sidebar-brand img { width: 40px; height: 40px; border-radius: 50%; }
+    .sidebar-brand .brand-name { font-weight: 700; font-size: 15px; }
+    .sidebar-brand .brand-status { font-size: 11px; color: var(--green); }
 
-    .sidebar-brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 0 8px;
-      margin-bottom: 32px;
+    /* Server selector */
+    .server-selector { margin-bottom: 20px; padding: 0 4px; }
+    .server-selector label { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 6px; padding: 0 4px; }
+    .server-selector select {
+      width: 100%; padding: 9px 12px; background: var(--bg-primary); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text-primary); font-family: inherit; font-size: 13px; cursor: pointer;
     }
+    .server-selector select:focus { outline: none; border-color: var(--accent); }
 
-    .sidebar-brand img {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-    }
-
-    .sidebar-brand .brand-name {
-      font-weight: 700;
-      font-size: 15px;
-    }
-
-    .sidebar-brand .brand-status {
-      font-size: 11px;
-      color: var(--green);
-    }
-
-    .nav-section {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      padding: 0 8px;
-      margin: 20px 0 8px;
-    }
-
+    .nav-section { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; padding: 0 8px; margin: 16px 0 6px; }
     .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--text-secondary);
-      transition: all 0.15s;
+      display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px;
+      cursor: pointer; font-size: 14px; font-weight: 500; color: var(--text-secondary); transition: all 0.15s;
     }
-
     .nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
     .nav-item.active { background: var(--accent); color: white; }
     .nav-item .icon { font-size: 18px; width: 24px; text-align: center; }
-
-    .sidebar-footer {
-      margin-top: auto;
-      padding-top: 16px;
-      border-top: 1px solid var(--border);
-    }
+    .sidebar-footer { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border); }
 
     .main {
-      margin-left: 240px;
-      padding: 32px;
-      min-height: 100vh;
+      margin-left: 250px; padding: 32px; min-height: 100vh;
       background: radial-gradient(ellipse at 80% 0%, rgba(108,92,231,0.06) 0%, transparent 50%);
     }
-
-    .page-header {
-      margin-bottom: 32px;
-    }
-
-    .page-header h2 {
-      font-size: 24px;
-      font-weight: 800;
-    }
-
-    .page-header p {
-      color: var(--text-secondary);
-      margin-top: 4px;
-    }
+    .page-header { margin-bottom: 28px; }
+    .page-header h2 { font-size: 24px; font-weight: 800; }
+    .page-header p { color: var(--text-secondary); margin-top: 4px; }
 
     /* ─── Stats Cards ─── */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-bottom: 32px;
-    }
-
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
     .stat-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      transition: all 0.2s;
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 20px; transition: all 0.2s;
     }
-
-    .stat-card:hover {
-      border-color: var(--accent);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
-    }
-
+    .stat-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
     .stat-card .stat-icon { font-size: 28px; margin-bottom: 12px; }
     .stat-card .stat-value { font-size: 28px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
     .stat-card .stat-label { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
 
-    /* ─── Cards / Panels ─── */
-    .card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
-      margin-bottom: 20px;
-    }
-
-    .card h3 {
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+    /* ─── Cards ─── */
+    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; }
+    .card h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
 
     /* ─── Tables ─── */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th {
-      text-align: left;
-      padding: 10px 12px;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    td {
-      padding: 12px;
-      font-size: 14px;
-      border-bottom: 1px solid var(--border);
-    }
-
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 10px 12px; font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+    td { padding: 12px; font-size: 14px; border-bottom: 1px solid var(--border); }
     tr:hover td { background: var(--bg-hover); }
-
-    .badge {
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 600;
-    }
-
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
     .badge-green { background: rgba(0,210,160,0.15); color: var(--green); }
     .badge-red { background: rgba(255,107,107,0.15); color: var(--red); }
     .badge-yellow { background: rgba(255,217,61,0.15); color: var(--yellow); }
+    .badge-purple { background: rgba(108,92,231,0.15); color: var(--accent-light); }
 
     /* ─── Forms ─── */
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 10px 14px; background: var(--bg-primary); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text-primary); font-family: inherit; font-size: 14px;
     }
-
-    .form-group {
-      margin-bottom: 16px;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      margin-bottom: 6px;
-    }
-
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-      width: 100%;
-      padding: 10px 14px;
-      background: var(--bg-primary);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text-primary);
-      font-family: inherit;
-      font-size: 14px;
-    }
-
-    .form-group textarea {
-      min-height: 80px;
-      resize: vertical;
-    }
-
-    .form-group input:focus,
-    .form-group select:focus,
-    .form-group textarea:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-
-    .form-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-    }
+    .form-group textarea { min-height: 80px; resize: vertical; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); }
+    .form-actions { display: flex; gap: 8px; margin-top: 8px; }
 
     /* ─── Channel tree ─── */
     .channel-tree { padding: 0; }
-    .channel-category {
-      margin-bottom: 12px;
-    }
-    .channel-category-name {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 4px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .channel-item {
-      padding: 6px 8px 6px 24px;
-      font-size: 14px;
-      color: var(--text-secondary);
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
+    .channel-category { margin-bottom: 12px; }
+    .channel-category-name { font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+    .channel-item { padding: 6px 8px 6px 24px; font-size: 14px; color: var(--text-secondary); border-radius: 4px; display: flex; align-items: center; gap: 6px; }
     .channel-item:hover { background: var(--bg-hover); color: var(--text-primary); }
 
-    /* ─── Page visibility ─── */
+    /* ─── Info box ─── */
+    .info-box { background: rgba(108,92,231,0.08); border: 1px solid rgba(108,92,231,0.2); border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; font-size: 14px; color: var(--text-secondary); }
+    .info-box strong { color: var(--text-primary); }
+
+    /* ─── Config items ─── */
+    .config-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .config-item:last-child { border-bottom: none; }
+    .config-label { font-size: 13px; color: var(--text-secondary); }
+    .config-value { font-size: 14px; font-weight: 600; }
+
+    /* ─── Pages ─── */
     .page { display: none; }
     .page.active { display: block; }
+    .no-server { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+    .no-server .no-server-icon { font-size: 48px; margin-bottom: 16px; }
+    .no-server p { font-size: 15px; }
 
     /* ─── Toast ─── */
-    .toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      padding: 14px 20px;
-      background: var(--bg-card);
-      border: 1px solid var(--green);
-      border-radius: 10px;
-      font-size: 14px;
-      z-index: 1000;
-      animation: slideIn 0.3s ease;
-    }
-
-    @keyframes slideIn {
-      from { transform: translateY(20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
+    .toast { position: fixed; bottom: 24px; right: 24px; padding: 14px 20px; background: var(--bg-card); border: 1px solid var(--green); border-radius: 10px; font-size: 14px; z-index: 1000; animation: slideIn 0.3s ease; }
+    @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
     /* ─── Responsive ─── */
     @media (max-width: 768px) {
       .sidebar { width: 60px; padding: 16px 8px; }
-      .sidebar .brand-name, .sidebar .brand-status, .sidebar .nav-section, .sidebar .nav-item span:not(.icon) { display: none; }
+      .sidebar .brand-name, .sidebar .brand-status, .sidebar .nav-section, .sidebar .nav-item span:not(.icon), .server-selector { display: none; }
       .main { margin-left: 60px; padding: 16px; }
       .stats-grid { grid-template-columns: 1fr 1fr; }
       .form-grid { grid-template-columns: 1fr; }
@@ -419,14 +185,13 @@
         Iniciar sesión con Discord
       </a>
       <a href="/api/bot/invite" target="_blank" class="btn btn-ghost" style="margin-top:10px;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;width:100%">
-        <span>+</span> Añadir bot a un servidor
+        <span>➕</span> Añadir bot a un servidor
       </a>
     </div>
   </div>
 
   <!-- APP -->
   <div id="app">
-    <!-- Sidebar -->
     <nav class="sidebar">
       <div class="sidebar-brand">
         <img id="bot-avatar" src="" alt="Bot">
@@ -436,15 +201,23 @@
         </div>
       </div>
 
+      <!-- Server Selector -->
+      <div class="server-selector">
+        <label>Servidor</label>
+        <select id="guild-select" onchange="onGuildSelect()">
+          <option value="">Selecciona un servidor...</option>
+        </select>
+      </div>
+
       <div class="nav-section">Principal</div>
       <div class="nav-item active" data-page="overview" onclick="showPage('overview')">
         <span class="icon">📊</span><span>Overview</span>
       </div>
-      <div class="nav-item" data-page="servers" onclick="showPage('servers')">
-        <span class="icon">🏠</span><span>Servidores</span>
-      </div>
 
-      <div class="nav-section">Gestión</div>
+      <div class="nav-section">Gestión del servidor</div>
+      <div class="nav-item" data-page="server-info" onclick="showPage('server-info')">
+        <span class="icon">🏠</span><span>Info & Canales</span>
+      </div>
       <div class="nav-item" data-page="announcements" onclick="showPage('announcements')">
         <span class="icon">📢</span><span>Anuncios</span>
       </div>
@@ -453,6 +226,9 @@
       </div>
       <div class="nav-item" data-page="warnings-page" onclick="showPage('warnings-page')">
         <span class="icon">⚠️</span><span>Advertencias</span>
+      </div>
+      <div class="nav-item" data-page="verification" onclick="showPage('verification')">
+        <span class="icon">🔐</span><span>Verificación</span>
       </div>
 
       <div class="sidebar-footer">
@@ -465,7 +241,6 @@
       </div>
     </nav>
 
-    <!-- Main Content -->
     <div class="main">
 
       <!-- OVERVIEW PAGE -->
@@ -474,35 +249,13 @@
           <h2>Dashboard</h2>
           <p>Vista general del bot</p>
         </div>
-
         <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-icon">🏠</div>
-            <div class="stat-value" id="stat-guilds">-</div>
-            <div class="stat-label">Servidores</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">👥</div>
-            <div class="stat-value" id="stat-members">-</div>
-            <div class="stat-label">Miembros totales</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">💬</div>
-            <div class="stat-value" id="stat-channels">-</div>
-            <div class="stat-label">Canales</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">📡</div>
-            <div class="stat-value" id="stat-ping">-</div>
-            <div class="stat-label">Latencia (ms)</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">⏱️</div>
-            <div class="stat-value" id="stat-uptime">-</div>
-            <div class="stat-label">Uptime</div>
-          </div>
+          <div class="stat-card"><div class="stat-icon">🏠</div><div class="stat-value" id="stat-guilds">-</div><div class="stat-label">Servidores</div></div>
+          <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value" id="stat-members">-</div><div class="stat-label">Miembros totales</div></div>
+          <div class="stat-card"><div class="stat-icon">💬</div><div class="stat-value" id="stat-channels">-</div><div class="stat-label">Canales</div></div>
+          <div class="stat-card"><div class="stat-icon">📡</div><div class="stat-value" id="stat-ping">-</div><div class="stat-label">Latencia (ms)</div></div>
+          <div class="stat-card"><div class="stat-icon">⏱️</div><div class="stat-value" id="stat-uptime">-</div><div class="stat-label">Uptime</div></div>
         </div>
-
         <div class="card">
           <h3>📅 Anuncios Programados</h3>
           <table>
@@ -512,137 +265,29 @@
         </div>
       </div>
 
-      <!-- SERVERS PAGE -->
-      <div class="page" id="page-servers">
-        <div class="page-header">
-          <h2>Servidores</h2>
-          <p>Servidores donde está el bot</p>
-        </div>
-        <div class="stats-grid" id="guilds-list"></div>
-        <div class="card" id="guild-detail" style="display:none">
-          <h3 id="guild-detail-name">Servidor</h3>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-            <div>
-              <h4 style="margin-bottom:8px;color:var(--text-secondary)">Canales</h4>
-              <div id="guild-channels" class="channel-tree"></div>
-            </div>
-            <div>
-              <h4 style="margin-bottom:8px;color:var(--text-secondary)">Roles</h4>
-              <div id="guild-roles"></div>
-            </div>
-          </div>
-        </div>
+      <!-- SERVER INFO PAGE -->
+      <div class="page" id="page-server-info">
+        <div id="server-info-content"></div>
       </div>
 
       <!-- ANNOUNCEMENTS PAGE -->
       <div class="page" id="page-announcements">
-        <div class="page-header">
-          <h2>Anuncios Programados</h2>
-          <p>Crea y gestiona anuncios automáticos</p>
-        </div>
-
-        <div class="card">
-          <h3>➕ Nuevo Anuncio Programado</h3>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Canal ID</label>
-              <input type="text" id="ann-channel" placeholder="ID del canal">
-            </div>
-            <div class="form-group">
-              <label>Frecuencia</label>
-              <select id="ann-cron">
-                <option value="0 * * * *">Cada hora</option>
-                <option value="0 */6 * * *">Cada 6 horas</option>
-                <option value="0 8 * * *">Diario (8 AM)</option>
-                <option value="0 12 * * *">Diario (12 PM)</option>
-                <option value="0 20 * * *">Diario (8 PM)</option>
-                <option value="0 9 * * 1-5">Lun-Vie (9 AM)</option>
-                <option value="0 9 * * 1">Semanal (Lunes)</option>
-                <option value="0 9 1 * *">Mensual (día 1)</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Título</label>
-              <input type="text" id="ann-title" placeholder="Título del anuncio">
-            </div>
-            <div class="form-group">
-              <label>Color</label>
-              <input type="color" id="ann-color" value="#6c5ce7">
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Mensaje</label>
-            <textarea id="ann-message" placeholder="Contenido del anuncio..."></textarea>
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" onclick="createAnnouncement()">Crear Anuncio</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3>📋 Anuncios Activos</h3>
-          <table>
-            <thead><tr><th>ID</th><th>Título</th><th>Canal</th><th>Frecuencia</th><th>Estado</th><th>Acciones</th></tr></thead>
-            <tbody id="announcements-table"></tbody>
-          </table>
-        </div>
+        <div id="announcements-content"></div>
       </div>
 
       <!-- MESSAGES PAGE -->
       <div class="page" id="page-messages">
-        <div class="page-header">
-          <h2>Enviar Mensaje</h2>
-          <p>Envía un mensaje como el bot a cualquier canal</p>
-        </div>
-
-        <div class="card">
-          <h3>💬 Nuevo Mensaje</h3>
-          <div class="form-group">
-            <label>Canal ID</label>
-            <input type="text" id="msg-channel" placeholder="ID del canal">
-          </div>
-          <div class="form-group">
-            <label>Contenido (texto plano)</label>
-            <textarea id="msg-content" placeholder="Mensaje de texto..."></textarea>
-          </div>
-
-          <h4 style="margin:16px 0 12px;font-size:14px;color:var(--text-secondary)">O enviar como Embed:</h4>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Título del embed</label>
-              <input type="text" id="msg-embed-title" placeholder="Título">
-            </div>
-            <div class="form-group">
-              <label>Color</label>
-              <input type="color" id="msg-embed-color" value="#6c5ce7">
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Descripción del embed</label>
-            <textarea id="msg-embed-desc" placeholder="Contenido del embed..."></textarea>
-          </div>
-          <div class="form-group">
-            <label>Footer</label>
-            <input type="text" id="msg-embed-footer" placeholder="Texto del footer">
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" onclick="sendMessage()">Enviar</button>
-          </div>
-        </div>
+        <div id="messages-content"></div>
       </div>
 
       <!-- WARNINGS PAGE -->
       <div class="page" id="page-warnings-page">
-        <div class="page-header">
-          <h2>Advertencias</h2>
-          <p>Historial de advertencias de moderación</p>
-        </div>
-        <div class="card">
-          <table>
-            <thead><tr><th>Usuario</th><th>Razón</th><th>Moderador</th><th>Fecha</th></tr></thead>
-            <tbody id="warnings-table"></tbody>
-          </table>
-        </div>
+        <div id="warnings-content"></div>
+      </div>
+
+      <!-- VERIFICATION PAGE -->
+      <div class="page" id="page-verification">
+        <div id="verification-content"></div>
       </div>
 
     </div>
@@ -650,34 +295,27 @@
 
   <script>
     const API = '';
+    let currentGuild = null;
+    let currentGuildData = null;
+    let allGuilds = [];
 
     // ─── Auth ───
     async function checkAuth() {
-      // Check for OAuth2 error in URL
       const params = new URLSearchParams(window.location.search);
       const error = params.get('error');
       if (error) {
         const el = document.getElementById('login-error');
-        const msgs = {
-          unauthorized: 'Tu cuenta de Discord no tiene acceso a este panel.',
-          token_failed: 'Error al autenticar con Discord. Intenta de nuevo.',
-          no_code: 'Error en el proceso de login. Intenta de nuevo.',
-          server_error: 'Error del servidor. Intenta de nuevo.',
-        };
+        const msgs = { unauthorized: 'Tu cuenta de Discord no tiene acceso a este panel.', token_failed: 'Error al autenticar con Discord. Intenta de nuevo.', no_code: 'Error en el proceso de login. Intenta de nuevo.', server_error: 'Error del servidor. Intenta de nuevo.' };
         el.textContent = msgs[error] || 'Error desconocido';
         el.style.display = 'block';
         window.history.replaceState({}, '', '/');
       }
-
       try {
         const res = await fetch(`${API}/api/auth-check`);
         const data = await res.json();
         if (data.authenticated) {
           document.getElementById('login-screen').style.display = 'none';
           document.getElementById('app').style.display = 'block';
-          if (data.user) {
-            window._discordUser = data.user;
-          }
           loadDashboard();
         }
       } catch {}
@@ -691,20 +329,31 @@
     // ─── Navigation ───
     function showPage(page) {
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.querySelectorAll('.nav-item[data-page]').forEach(n => n.classList.remove('active'));
       document.getElementById(`page-${page}`).classList.add('active');
-      document.querySelector(`[data-page="${page}"]`).classList.add('active');
+      const navItem = document.querySelector(`[data-page="${page}"]`);
+      if (navItem) navItem.classList.add('active');
 
-      if (page === 'servers') loadGuilds();
-      if (page === 'announcements') loadAnnouncements();
-      if (page === 'warnings-page') loadWarnings();
+      if (page === 'server-info') renderServerInfo();
+      if (page === 'announcements') renderAnnouncements();
+      if (page === 'messages') renderMessages();
+      if (page === 'warnings-page') renderWarnings();
+      if (page === 'verification') renderVerification();
+    }
+
+    function noServerHtml(action) {
+      return `<div class="no-server"><div class="no-server-icon">🏠</div><p>Selecciona un servidor en el panel izquierdo para ${action}</p></div>`;
     }
 
     // ─── Load Dashboard ───
     async function loadDashboard() {
       try {
-        const res = await fetch(`${API}/api/stats`);
-        const stats = await res.json();
+        const [statsRes, guildsRes] = await Promise.all([
+          fetch(`${API}/api/stats`),
+          fetch(`${API}/api/guilds`)
+        ]);
+        const stats = await statsRes.json();
+        allGuilds = await guildsRes.json();
 
         document.getElementById('bot-name').textContent = stats.botName || 'Bot';
         document.getElementById('bot-avatar').src = stats.botAvatar || '';
@@ -712,105 +361,159 @@
         document.getElementById('stat-members').textContent = (stats.members || 0).toLocaleString();
         document.getElementById('stat-channels').textContent = stats.channels || 0;
         document.getElementById('stat-ping').textContent = stats.ping || '-';
-
         const uptime = stats.uptime || 0;
-        const h = Math.floor(uptime / 3600);
-        const m = Math.floor((uptime % 3600) / 60);
-        document.getElementById('stat-uptime').textContent = `${h}h ${m}m`;
+        document.getElementById('stat-uptime').textContent = `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m`;
+
+        // Populate server selector
+        const select = document.getElementById('guild-select');
+        const prevVal = select.value;
+        select.innerHTML = '<option value="">Selecciona un servidor...</option>';
+        allGuilds.forEach(g => {
+          select.innerHTML += `<option value="${g.id}">${g.name} (${g.members} miembros)</option>`;
+        });
+        if (prevVal) select.value = prevVal;
+
+        // Auto-select if only one guild
+        if (!currentGuild && allGuilds.length === 1) {
+          select.value = allGuilds[0].id;
+          onGuildSelect();
+        }
 
         loadAnnouncementsOverview();
-      } catch (err) {
-        console.error('Error loading dashboard:', err);
+      } catch (err) { console.error('Error loading dashboard:', err); }
+    }
+
+    // ─── Guild Selection ───
+    async function onGuildSelect() {
+      const id = document.getElementById('guild-select').value;
+      if (!id) { currentGuild = null; currentGuildData = null; return; }
+      currentGuild = id;
+      try {
+        const res = await fetch(`${API}/api/guilds/${id}`);
+        currentGuildData = await res.json();
+      } catch { currentGuildData = null; }
+      // Refresh current page if it's a server-dependent page
+      const activePage = document.querySelector('.page.active');
+      if (activePage) {
+        const pageId = activePage.id.replace('page-', '');
+        if (['server-info', 'announcements', 'messages', 'warnings-page', 'verification'].includes(pageId)) {
+          showPage(pageId);
+        }
       }
     }
 
-    // ─── Guilds ───
-    async function loadGuilds() {
-      const res = await fetch(`${API}/api/guilds`);
-      const guilds = await res.json();
-      const container = document.getElementById('guilds-list');
-      container.innerHTML = guilds.map(g => `
-        <div class="stat-card" style="cursor:pointer" onclick="loadGuildDetail('${g.id}')">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-            ${g.icon ? `<img src="${g.icon}" style="width:40px;height:40px;border-radius:50%">` : '<div style="width:40px;height:40px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:18px">🏠</div>'}
-            <div class="stat-value" style="font-size:16px">${g.name}</div>
-          </div>
-          <div style="display:flex;gap:16px;font-size:13px;color:var(--text-secondary)">
-            <span>👥 ${g.members}</span>
-            <span>💬 ${g.channels}</span>
-          </div>
-        </div>
-      `).join('');
-    }
+    // ─── Server Info Page ───
+    function renderServerInfo() {
+      const el = document.getElementById('server-info-content');
+      if (!currentGuild || !currentGuildData) { el.innerHTML = noServerHtml('ver su información'); return; }
+      const g = currentGuildData;
 
-    async function loadGuildDetail(id) {
-      const res = await fetch(`${API}/api/guilds/${id}`);
-      const guild = await res.json();
-      document.getElementById('guild-detail').style.display = 'block';
-      document.getElementById('guild-detail-name').textContent = `📋 ${guild.name}`;
-
-      // Group channels by parent
+      // Group channels
       const categories = {};
-      const orphans = [];
-      guild.channels.forEach(c => {
-        if (c.type === 4) { // Category
-          if (!categories[c.id]) categories[c.id] = { name: c.name, channels: [] };
-        }
-      });
-      guild.channels.forEach(c => {
-        if (c.type !== 4) {
-          if (c.parent && categories[c.parent]) categories[c.parent].channels.push(c);
-          else orphans.push(c);
-        }
-      });
+      g.channels.forEach(c => { if (c.type === 4) categories[c.id] = { name: c.name, channels: [] }; });
+      g.channels.forEach(c => { if (c.type !== 4) { if (c.parent && categories[c.parent]) categories[c.parent].channels.push(c); } });
 
       const typeIcons = { 0: '#', 2: '🔊', 5: '📢', 15: '💬' };
       let channelHtml = '';
       for (const [, cat] of Object.entries(categories)) {
         channelHtml += `<div class="channel-category"><div class="channel-category-name">📁 ${cat.name}</div>`;
-        cat.channels.forEach(c => {
-          channelHtml += `<div class="channel-item">${typeIcons[c.type] || '#'} ${c.name}</div>`;
-        });
+        cat.channels.forEach(c => { channelHtml += `<div class="channel-item">${typeIcons[c.type] || '#'} ${c.name}</div>`; });
         channelHtml += '</div>';
       }
-      document.getElementById('guild-channels').innerHTML = channelHtml;
 
-      document.getElementById('guild-roles').innerHTML = guild.roles
-        .filter(r => r.name !== '@everyone')
-        .map(r => `<div style="padding:4px 0;font-size:14px"><span style="color:${r.color};font-weight:600">● ${r.name}</span> <span style="color:var(--text-secondary);font-size:12px">(${r.members})</span></div>`)
-        .join('');
+      const rolesHtml = g.roles.filter(r => r.name !== '@everyone')
+        .map(r => `<div style="padding:4px 0;font-size:14px"><span style="color:${r.color};font-weight:600">● ${r.name}</span> <span style="color:var(--text-secondary);font-size:12px">(${r.members})</span></div>`).join('');
+
+      el.innerHTML = `
+        <div class="page-header"><h2>🏠 ${g.name}</h2><p>${g.members} miembros · ${g.channels.length} canales · ${g.roles.length} roles</p></div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value">${g.members}</div><div class="stat-label">Miembros</div></div>
+          <div class="stat-card"><div class="stat-icon">💬</div><div class="stat-value">${g.channels.filter(c=>c.type===0).length}</div><div class="stat-label">Canales de texto</div></div>
+          <div class="stat-card"><div class="stat-icon">🔊</div><div class="stat-value">${g.channels.filter(c=>c.type===2).length}</div><div class="stat-label">Canales de voz</div></div>
+          <div class="stat-card"><div class="stat-icon">🎭</div><div class="stat-value">${g.roles.length}</div><div class="stat-label">Roles</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div class="card"><h3>💬 Canales</h3><div class="channel-tree">${channelHtml || '<p style="color:var(--text-secondary)">Sin canales</p>'}</div></div>
+          <div class="card"><h3>🎭 Roles</h3>${rolesHtml || '<p style="color:var(--text-secondary)">Sin roles</p>'}</div>
+        </div>`;
     }
 
-    // ─── Announcements ───
-    async function loadAnnouncements() {
+    // ─── Channel dropdown helper ───
+    function channelOptions(typeFilter) {
+      if (!currentGuildData) return '<option value="">Sin servidor</option>';
+      const channels = currentGuildData.channels.filter(c => {
+        if (typeFilter === 'text') return c.type === 0 || c.type === 5;
+        return true;
+      });
+      let html = '<option value="">Selecciona canal...</option>';
+      channels.forEach(c => {
+        const icon = c.type === 2 ? '🔊' : c.type === 5 ? '📢' : '#';
+        html += `<option value="${c.id}">${icon} ${c.name}</option>`;
+      });
+      return html;
+    }
+
+    // ─── Announcements Page ───
+    async function renderAnnouncements() {
+      const el = document.getElementById('announcements-content');
+      if (!currentGuild) { el.innerHTML = noServerHtml('gestionar anuncios'); return; }
+
+      el.innerHTML = `
+        <div class="page-header"><h2>📢 Anuncios — ${currentGuildData?.name || ''}</h2><p>Crea y gestiona anuncios programados para este servidor</p></div>
+        <div class="card">
+          <h3>➕ Nuevo Anuncio Programado</h3>
+          <div class="form-grid">
+            <div class="form-group"><label>Canal</label><select id="ann-channel">${channelOptions('text')}</select></div>
+            <div class="form-group"><label>Frecuencia</label>
+              <select id="ann-cron">
+                <option value="0 * * * *">Cada hora</option><option value="0 */6 * * *">Cada 6 horas</option>
+                <option value="0 8 * * *">Diario (8 AM)</option><option value="0 12 * * *">Diario (12 PM)</option>
+                <option value="0 20 * * *">Diario (8 PM)</option><option value="0 9 * * 1-5">Lun-Vie (9 AM)</option>
+                <option value="0 9 * * 1">Semanal (Lunes)</option><option value="0 9 1 * *">Mensual (día 1)</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Título</label><input type="text" id="ann-title" placeholder="Título del anuncio"></div>
+            <div class="form-group"><label>Color</label><input type="color" id="ann-color" value="#6c5ce7"></div>
+          </div>
+          <div class="form-group"><label>Mensaje</label><textarea id="ann-message" placeholder="Contenido del anuncio..."></textarea></div>
+          <div class="form-actions"><button class="btn btn-primary" onclick="createAnnouncement()">Crear Anuncio</button></div>
+        </div>
+        <div class="card"><h3>📋 Anuncios Activos</h3>
+          <table><thead><tr><th>ID</th><th>Título</th><th>Canal</th><th>Frecuencia</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody id="announcements-table"></tbody></table>
+        </div>`;
+
       const res = await fetch(`${API}/api/announcements`);
       const data = await res.json();
-      renderAnnouncementsTable(data, 'announcements-table');
+      // Filter by guild channels
+      const guildChannelIds = currentGuildData ? currentGuildData.channels.map(c => c.id) : [];
+      const filtered = {};
+      for (const [id, a] of Object.entries(data)) {
+        if (a.guildId === currentGuild || guildChannelIds.includes(a.channelId)) filtered[id] = a;
+      }
+      renderAnnouncementsTable(filtered, 'announcements-table');
+    }
+
+    function renderAnnouncementsTable(data, tableId) {
+      const tbody = document.getElementById(tableId);
+      if (!tbody) return;
+      const entries = Object.entries(data);
+      if (!entries.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-secondary)">No hay anuncios programados</td></tr>'; return; }
+      const channelName = (id) => { if (!currentGuildData) return id?.slice(-6) || '-'; const ch = currentGuildData.channels.find(c => c.id === id); return ch ? `#${ch.name}` : id?.slice(-6) || '-'; };
+      tbody.innerHTML = entries.map(([id, a]) => `<tr>
+        <td><code style="color:var(--accent-light)">${id}</code></td>
+        <td>${a.title || '-'}</td>
+        <td>${channelName(a.channelId)}</td>
+        <td><code style="font-size:12px">${a.cron || '-'}</code></td>
+        <td><span class="badge ${a.active ? 'badge-green' : 'badge-red'}">${a.active ? 'Activo' : 'Pausado'}</span></td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteAnnouncement('${id}')">🗑️</button></td>
+      </tr>`).join('');
     }
 
     async function loadAnnouncementsOverview() {
       const res = await fetch(`${API}/api/announcements`);
       const data = await res.json();
       renderAnnouncementsTable(data, 'overview-announcements');
-    }
-
-    function renderAnnouncementsTable(data, tableId) {
-      const tbody = document.getElementById(tableId);
-      const entries = Object.entries(data);
-      if (!entries.length) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-secondary)">No hay anuncios programados</td></tr>';
-        return;
-      }
-      tbody.innerHTML = entries.map(([id, a]) => `
-        <tr>
-          <td><code style="color:var(--accent-light)">${id}</code></td>
-          <td>${a.title || '-'}</td>
-          <td>${a.channelId ? `<code>${a.channelId.slice(-6)}</code>` : '-'}</td>
-          <td><code style="font-size:12px">${a.cron || '-'}</code></td>
-          <td><span class="badge ${a.active ? 'badge-green' : 'badge-red'}">${a.active ? 'Activo' : 'Pausado'}</span></td>
-          <td><button class="btn btn-danger" style="padding:4px 12px;font-size:12px" onclick="deleteAnnouncement('${id}')">🗑️</button></td>
-        </tr>
-      `).join('');
     }
 
     async function createAnnouncement() {
@@ -820,34 +523,44 @@
         message: document.getElementById('ann-message').value,
         cron: document.getElementById('ann-cron').value,
         color: document.getElementById('ann-color').value,
+        guildId: currentGuild,
         active: true,
       };
-
-      if (!body.channelId || !body.message) return toast('Completa canal y mensaje', true);
-
-      const res = await fetch(`${API}/api/announcements`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-
-      if (res.ok) {
-        toast('✅ Anuncio creado');
-        loadAnnouncements();
-        document.getElementById('ann-title').value = '';
-        document.getElementById('ann-message').value = '';
-      }
+      if (!body.channelId || !body.message) return toast('Selecciona canal y escribe un mensaje', true);
+      const res = await fetch(`${API}/api/announcements`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      if (res.ok) { toast('✅ Anuncio creado'); renderAnnouncements(); }
     }
 
     async function deleteAnnouncement(id) {
       if (!confirm('¿Eliminar este anuncio?')) return;
       await fetch(`${API}/api/announcements/${id}`, { method: 'DELETE' });
       toast('🗑️ Anuncio eliminado');
-      loadAnnouncements();
+      renderAnnouncements();
       loadAnnouncementsOverview();
     }
 
-    // ─── Send Message ───
+    // ─── Messages Page ───
+    function renderMessages() {
+      const el = document.getElementById('messages-content');
+      if (!currentGuild) { el.innerHTML = noServerHtml('enviar mensajes'); return; }
+
+      el.innerHTML = `
+        <div class="page-header"><h2>💬 Enviar Mensaje — ${currentGuildData?.name || ''}</h2><p>Envía un mensaje como el bot a un canal de este servidor</p></div>
+        <div class="card">
+          <h3>💬 Nuevo Mensaje</h3>
+          <div class="form-group"><label>Canal</label><select id="msg-channel">${channelOptions('text')}</select></div>
+          <div class="form-group"><label>Contenido (texto plano)</label><textarea id="msg-content" placeholder="Mensaje de texto..."></textarea></div>
+          <h4 style="margin:16px 0 12px;font-size:14px;color:var(--text-secondary)">O enviar como Embed:</h4>
+          <div class="form-grid">
+            <div class="form-group"><label>Título del embed</label><input type="text" id="msg-embed-title" placeholder="Título"></div>
+            <div class="form-group"><label>Color</label><input type="color" id="msg-embed-color" value="#6c5ce7"></div>
+          </div>
+          <div class="form-group"><label>Descripción del embed</label><textarea id="msg-embed-desc" placeholder="Contenido del embed..."></textarea></div>
+          <div class="form-group"><label>Footer</label><input type="text" id="msg-embed-footer" placeholder="Texto del footer"></div>
+          <div class="form-actions"><button class="btn btn-primary" onclick="sendMessage()">Enviar</button></div>
+        </div>`;
+    }
+
     async function sendMessage() {
       const channelId = document.getElementById('msg-channel').value;
       const content = document.getElementById('msg-content').value;
@@ -855,10 +568,8 @@
       const embedDesc = document.getElementById('msg-embed-desc').value;
       const embedColor = document.getElementById('msg-embed-color').value;
       const embedFooter = document.getElementById('msg-embed-footer').value;
-
-      if (!channelId) return toast('Ingresa el ID del canal', true);
+      if (!channelId) return toast('Selecciona un canal', true);
       if (!content && !embedDesc) return toast('Escribe un mensaje o embed', true);
-
       const body = { channelId };
       if (content) body.content = content;
       if (embedTitle || embedDesc) {
@@ -868,44 +579,92 @@
         if (embedColor) body.embed.color = embedColor;
         if (embedFooter) body.embed.footer = embedFooter;
       }
-
-      const res = await fetch(`${API}/api/send-message`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-
+      const res = await fetch(`${API}/api/send-message`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       if (res.ok) {
         toast('✅ Mensaje enviado');
         document.getElementById('msg-content').value = '';
         document.getElementById('msg-embed-title').value = '';
         document.getElementById('msg-embed-desc').value = '';
-      } else {
-        const err = await res.json();
-        toast(`❌ ${err.error}`, true);
-      }
+      } else { const err = await res.json(); toast(`❌ ${err.error}`, true); }
     }
 
-    // ─── Warnings ───
-    async function loadWarnings() {
+    // ─── Warnings Page ───
+    async function renderWarnings() {
+      const el = document.getElementById('warnings-content');
+      if (!currentGuild) { el.innerHTML = noServerHtml('ver advertencias'); return; }
+
+      el.innerHTML = `
+        <div class="page-header"><h2>⚠️ Advertencias — ${currentGuildData?.name || ''}</h2><p>Historial de advertencias de moderación de este servidor</p></div>
+        <div class="card"><table><thead><tr><th>Usuario ID</th><th>Razón</th><th>Moderador</th><th>Fecha</th></tr></thead>
+        <tbody id="warnings-table"></tbody></table></div>`;
+
       const res = await fetch(`${API}/api/warnings`);
       const data = await res.json();
       const tbody = document.getElementById('warnings-table');
-
       const rows = [];
       for (const [key, list] of Object.entries(data)) {
-        const userId = key.split('-')[1] || key;
+        const parts = key.split('-');
+        const guildId = parts[0];
+        const userId = parts[1] || key;
+        if (guildId !== currentGuild) continue;
         for (const w of list) {
-          rows.push(`<tr>
-            <td><code>${userId.slice(-6)}</code></td>
-            <td>${w.reason}</td>
-            <td>${w.mod || '-'}</td>
-            <td>${w.date ? new Date(w.date).toLocaleDateString() : '-'}</td>
-          </tr>`);
+          rows.push(`<tr><td><code>${userId}</code></td><td>${w.reason}</td><td>${w.mod || '-'}</td><td>${w.date ? new Date(w.date).toLocaleDateString() : '-'}</td></tr>`);
         }
       }
+      tbody.innerHTML = rows.length ? rows.join('') : '<tr><td colspan="4" style="text-align:center;color:var(--text-secondary)">Sin advertencias en este servidor</td></tr>';
+    }
 
-      tbody.innerHTML = rows.length ? rows.join('') : '<tr><td colspan="4" style="text-align:center;color:var(--text-secondary)">Sin advertencias</td></tr>';
+    // ─── Verification Page ───
+    async function renderVerification() {
+      const el = document.getElementById('verification-content');
+      if (!currentGuild) { el.innerHTML = noServerHtml('ver la verificación'); return; }
+
+      el.innerHTML = '<div class="page-header"><h2>🔐 Verificación</h2><p>Cargando configuración...</p></div>';
+
+      try {
+        const res = await fetch(`${API}/api/settings/${currentGuild}`);
+        const data = await res.json();
+        const v = data.verify || {};
+
+        const typeNames = { puzzle: '🧩 Puzzle — Resolver acertijo', colors: '🎨 Colores — Secuencia de emojis', math: '🔢 Matemáticas — Resolver operación', question: '📝 Pregunta — Respuesta libre' };
+
+        if (v.channelId) {
+          const channelName = currentGuildData?.channels.find(c => c.id === v.channelId)?.name || v.channelId;
+          const roleName = currentGuildData?.roles.find(r => r.id === v.roleId)?.name || v.roleId;
+
+          el.innerHTML = `
+            <div class="page-header"><h2>🔐 Verificación — ${currentGuildData?.name || ''}</h2><p>Sistema de verificación creativa configurado</p></div>
+            <div class="card">
+              <h3>✅ Verificación Activa</h3>
+              <div class="config-item"><span class="config-label">Canal</span><span class="config-value">#${channelName}</span></div>
+              <div class="config-item"><span class="config-label">Rol asignado</span><span class="config-value">@${roleName}</span></div>
+              <div class="config-item"><span class="config-label">Tipo de desafío</span><span class="config-value">${typeNames[v.type] || v.type}</span></div>
+            </div>
+            <div class="info-box">
+              <strong>Para cambiar la configuración</strong> usa el comando <code>/setupverify</code> en Discord.<br>
+              Opciones: canal, rol a dar, y tipo de verificación (puzzle, colores, matemáticas, pregunta).
+            </div>`;
+        } else {
+          el.innerHTML = `
+            <div class="page-header"><h2>🔐 Verificación — ${currentGuildData?.name || ''}</h2><p>Sistema de verificación creativa</p></div>
+            <div class="card" style="text-align:center;padding:40px">
+              <div style="font-size:48px;margin-bottom:16px">🔐</div>
+              <h3 style="justify-content:center">Verificación no configurada</h3>
+              <p style="color:var(--text-secondary);margin-top:8px">Usa el comando <code>/setupverify</code> en Discord para activarla.</p>
+              <div class="info-box" style="text-align:left;margin-top:20px">
+                <strong>Cómo configurar:</strong><br><br>
+                <code>/setupverify canal:#verificación rol:@Verificado tipo:Puzzle</code><br><br>
+                <strong>Tipos disponibles:</strong><br>
+                🧩 <strong>Puzzle</strong> — Resolver un acertijo en español<br>
+                🎨 <strong>Colores</strong> — Memorizar secuencia de emojis<br>
+                🔢 <strong>Matemáticas</strong> — Resolver operación aritmética<br>
+                📝 <strong>Pregunta</strong> — Responder con al menos 10 palabras
+              </div>
+            </div>`;
+        }
+      } catch {
+        el.innerHTML = noServerHtml('ver la verificación');
+      }
     }
 
     // ─── Toast ───
@@ -923,7 +682,6 @@
       if (document.getElementById('app').style.display !== 'none') loadDashboard();
     }, 30000);
 
-    // Init
     checkAuth();
   </script>
 </body>

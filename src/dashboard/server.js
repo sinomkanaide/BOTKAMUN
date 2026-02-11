@@ -649,16 +649,16 @@ app.get("/api/settings/:guildId", requireAuth, (req, res) => {
   res.json({ welcome: welcomeConfig, verify: verifyConfig });
 });
 
-// Serve the dashboard HTML
-app.get("{*splat}", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-
 function start(client) {
   botClient = client;
 
   const { registerClaimRoutes } = require("./claim-routes");
   registerClaimRoutes(app, () => botClient);
+
+  // Serve the dashboard HTML (catch-all MUST be registered after all API routes)
+  app.get("{*splat}", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
+  });
 
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {

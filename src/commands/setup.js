@@ -326,4 +326,4 @@ const handlers = {
   },
 };
 
-module.exports = { definitions, handlers };
+module.exports = { definitions, handlers, templates, CHANNEL_TYPES };

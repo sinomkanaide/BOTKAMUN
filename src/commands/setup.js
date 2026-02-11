@@ -58,12 +58,14 @@ const templates = {
       },
     ],
     roles: [
-      { name: "👑 Owner", color: 0xf1c40f, hoist: true },
-      { name: "🛡️ Admin", color: 0xe74c3c, hoist: true },
-      { name: "🔧 Moderator", color: 0xe67e22, hoist: true },
-      { name: "✅ Verified", color: 0x2ecc71 },
-      { name: "🎮 Gamer", color: 0x9b59b6 },
-      { name: "🆕 Newcomer", color: 0x95a5a6 },
+      { name: "☀️ Faraón", color: 0xffd700, hoist: true },
+      { name: "🐍 Visir", color: 0xe74c3c, hoist: true },
+      { name: "🔱 Sumo Sacerdote", color: 0xf1c40f, hoist: true },
+      { name: "📜 Scribe", color: 0x9b59b6, hoist: true },
+      { name: "🏛️ Official", color: 0x4a90d9, hoist: true },
+      { name: "⚒️ Craftsman", color: 0xcd7f32, hoist: true },
+      { name: "🏺 Ciudadano de Egipto", color: 0xc8a96e },
+      { name: "⛓️ Esclavo", color: 0x6d6d6d },
     ],
   },
 
@@ -115,12 +117,14 @@ const templates = {
       },
     ],
     roles: [
-      { name: "👑 Founder", color: 0xf1c40f, hoist: true },
-      { name: "🛡️ Admin", color: 0xe74c3c, hoist: true },
-      { name: "🔧 Mod", color: 0xe67e22, hoist: true },
-      { name: "⭐ VIP", color: 0x3498db, hoist: true },
-      { name: "✅ Member", color: 0x2ecc71 },
-      { name: "🆕 Unverified", color: 0x95a5a6 },
+      { name: "☀️ Faraón", color: 0xffd700, hoist: true },
+      { name: "🐍 Visir", color: 0xe74c3c, hoist: true },
+      { name: "🔱 Sumo Sacerdote", color: 0xf1c40f, hoist: true },
+      { name: "📜 Scribe", color: 0x9b59b6, hoist: true },
+      { name: "🏛️ Official", color: 0x4a90d9, hoist: true },
+      { name: "⚒️ Craftsman", color: 0xcd7f32, hoist: true },
+      { name: "🏺 Ciudadano de Egipto", color: 0xc8a96e },
+      { name: "⛓️ Esclavo", color: 0x6d6d6d },
     ],
   },
 
@@ -170,11 +174,14 @@ const templates = {
       },
     ],
     roles: [
-      { name: "👔 Director", color: 0xf1c40f, hoist: true },
-      { name: "📋 Manager", color: 0xe74c3c, hoist: true },
-      { name: "💻 Developer", color: 0x3498db, hoist: true },
-      { name: "🎨 Designer", color: 0x9b59b6, hoist: true },
-      { name: "✅ Member", color: 0x2ecc71 },
+      { name: "☀️ Faraón", color: 0xffd700, hoist: true },
+      { name: "🐍 Visir", color: 0xe74c3c, hoist: true },
+      { name: "🔱 Sumo Sacerdote", color: 0xf1c40f, hoist: true },
+      { name: "📜 Scribe", color: 0x9b59b6, hoist: true },
+      { name: "🏛️ Official", color: 0x4a90d9, hoist: true },
+      { name: "⚒️ Craftsman", color: 0xcd7f32, hoist: true },
+      { name: "🏺 Ciudadano de Egipto", color: 0xc8a96e },
+      { name: "⛓️ Esclavo", color: 0x6d6d6d },
     ],
   },
 
@@ -241,14 +248,14 @@ const templates = {
       },
     ],
     roles: [
-      { name: "👑 Founder", color: 0xf1c40f, hoist: true },
-      { name: "🛡️ Admin", color: 0xe74c3c, hoist: true },
-      { name: "🔧 Moderator", color: 0xe67e22, hoist: true },
-      { name: "🛠️ Builder", color: 0x3498db, hoist: true },
-      { name: "💎 OG Holder", color: 0x9b59b6, hoist: true },
-      { name: "🐋 Whale", color: 0x1abc9c, hoist: true },
-      { name: "✅ Verified", color: 0x2ecc71 },
-      { name: "🆕 Newcomer", color: 0x95a5a6 },
+      { name: "☀️ Faraón", color: 0xffd700, hoist: true },
+      { name: "🐍 Visir", color: 0xe74c3c, hoist: true },
+      { name: "🔱 Sumo Sacerdote", color: 0xf1c40f, hoist: true },
+      { name: "📜 Scribe", color: 0x9b59b6, hoist: true },
+      { name: "🏛️ Official", color: 0x4a90d9, hoist: true },
+      { name: "⚒️ Craftsman", color: 0xcd7f32, hoist: true },
+      { name: "🏺 Ciudadano de Egipto", color: 0xc8a96e },
+      { name: "⛓️ Esclavo", color: 0x6d6d6d },
     ],
   },
 };
@@ -353,7 +360,7 @@ const handlers = {
             });
             // Dar acceso a roles de admin/mod
             for (const [name, role] of Object.entries(createdRoles)) {
-              if (name.includes("Admin") || name.includes("Mod") || name.includes("Director") || name.includes("Owner") || name.includes("Fundador") || name.includes("Manager")) {
+              if (name.includes("Faraón") || name.includes("Visir") || name.includes("Admin") || name.includes("Mod")) {
                 await channel.permissionOverwrites.edit(role, { ViewChannel: true });
               }
             }

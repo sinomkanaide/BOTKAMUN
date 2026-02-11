@@ -376,7 +376,7 @@ app.post("/api/setup-server", requireAuth, async (req, res) => {
         if (ch.staffOnly) {
           await channel.permissionOverwrites.edit(guild.roles.everyone, { ViewChannel: false });
           for (const [name, role] of Object.entries(createdRoles)) {
-            if (name.includes("Admin") || name.includes("Mod") || name.includes("Director") || name.includes("Owner") || name.includes("Fundador") || name.includes("Manager")) {
+            if (name.includes("Faraón") || name.includes("Visir") || name.includes("Admin") || name.includes("Mod")) {
               await channel.permissionOverwrites.edit(role, { ViewChannel: true });
             }
           }
@@ -420,7 +420,7 @@ app.post("/api/setup-server", requireAuth, async (req, res) => {
     if (enableVerification && verifyChannelId) {
       // Find or use the "Verificado"/"Miembro" role
       const verifyRole = Object.entries(createdRoles).find(
-        ([name]) => name.includes("Verified") || name.includes("Member") || name.includes("Verificado") || name.includes("Miembro")
+        ([name]) => name.includes("Ciudadano") || name.includes("Verified") || name.includes("Member") || name.includes("Verificado") || name.includes("Miembro")
       );
       if (verifyRole) {
         verifyRoleId = verifyRole[1].id;

@@ -1101,7 +1101,7 @@
     // ─── Setup Wizard ───
     let wizardStep = 1;
     let wizardTemplates = null;
-    let wizardData = { templateKey: null, categories: [], roles: [], deleteExisting: false, enableVerification: false, verifyType: 'puzzle', enableTickets: false };
+    let wizardData = { templateKey: null, categories: [], roles: [], deleteExisting: false, enableVerification: false, verifyType: 'puzzle', enableTickets: false, ticketTypes: [], ticketPanelChannelName: '' };
 
     async function renderSetupWizard() {
       const el = document.getElementById('setup-wizard-content');
@@ -1219,9 +1219,92 @@
           <div class="toggle-row" style="margin-top:12px">
             <label><input type="checkbox" ${wizardData.enableTickets ? 'checked' : ''} onchange="wizardData.enableTickets=this.checked;renderSetupWizard()"> Deploy ticket panel</label>
           </div>
-          ${wizardData.enableTickets ? '<div class="info-box" style="margin-top:8px">The ticket panel will be deployed after setup completes. Make sure ticket types are already configured in the Tickets page.</div>' : ''}
+          ${wizardData.enableTickets ? renderWizardTicketConfig() : ''}
         </div>
         <div class="wizard-nav"><button class="btn btn-ghost" onclick="wizardPrev()">← Back</button><button class="btn btn-primary" onclick="wizardNext()">Review →</button></div>`;
+    }
+
+    function renderWizardTicketConfig() {
+      // Build channel options from enabled template categories/channels (text only, not staff)
+      const channelNames = [];
+      wizardData.categories.filter(c => c.enabled).forEach(cat => {
+        cat.channels.filter(ch => ch.enabled && ch.type !== 'voice' && !ch.staffOnly).forEach(ch => {
+          channelNames.push(ch.name);
+        });
+      });
+      const channelOpts = channelNames.map(n => `<option value="${n}" ${wizardData.ticketPanelChannelName === n ? 'selected' : ''}>${n}</option>`).join('');
+
+      // Build category options from enabled categories
+      const catNames = wizardData.categories.filter(c => c.enabled).map(c => c.name);
+      const catOpts = catNames.map(n => `<option value="${n}">${n}</option>`).join('');
+
+      // Build role options from enabled roles
+      const roleNames = wizardData.roles.filter(r => r.enabled).map(r => r.name);
+      const roleOpts = roleNames.map(n => `<option value="${n}">${n}</option>`).join('');
+
+      // Existing ticket types list
+      let typesHtml = '';
+      if (wizardData.ticketTypes.length) {
+        typesHtml = '<div style="margin-bottom:12px">' + wizardData.ticketTypes.map((t, i) => `
+          <div class="toggle-row">
+            <label>${t.emoji} <strong>${t.name}</strong> — ${t.description} <span style="color:var(--text-secondary);font-size:12px">(${t.categoryName} / ${t.handlerRoleName})</span></label>
+            <button class="btn btn-danger btn-sm" onclick="removeWizardTicketType(${i})">Remove</button>
+          </div>`).join('') + '</div>';
+      }
+
+      return `
+        <div style="padding:12px;margin-top:8px">
+          <div class="form-group">
+            <label>Panel channel (where the ticket panel will appear)</label>
+            <select onchange="wizardData.ticketPanelChannelName=this.value" style="width:100%;padding:10px 14px;background:var(--bg-primary);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:14px">
+              <option value="">Select channel...</option>
+              ${channelOpts}
+            </select>
+          </div>
+          ${typesHtml}
+          <div style="background:var(--bg-primary);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:8px">
+            <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--accent-light)">➕ Add Ticket Type</div>
+            <div class="form-grid">
+              <div class="form-group"><label>Name</label><input type="text" id="wiz-tt-name" placeholder="e.g. Support"></div>
+              <div class="form-group"><label>Emoji</label><input type="text" id="wiz-tt-emoji" placeholder="e.g. 🎫" style="width:80px"></div>
+              <div class="form-group"><label>Category (where tickets are created)</label>
+                <select id="wiz-tt-category" style="width:100%;padding:10px 14px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:14px">
+                  <option value="">Select category...</option>${catOpts}
+                </select>
+              </div>
+              <div class="form-group"><label>Handler role</label>
+                <select id="wiz-tt-role" style="width:100%;padding:10px 14px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:14px">
+                  <option value="">Select role...</option>${roleOpts}
+                </select>
+              </div>
+              <div class="form-group"><label>Color</label><input type="color" id="wiz-tt-color" value="#5865f2"></div>
+            </div>
+            <div class="form-group"><label>Description</label><input type="text" id="wiz-tt-desc" placeholder="Short description shown on the panel"></div>
+            <button class="btn btn-ghost" onclick="addWizardTicketType()">Add Type</button>
+          </div>
+        </div>`;
+    }
+
+    function addWizardTicketType() {
+      const name = document.getElementById('wiz-tt-name')?.value.trim();
+      const emoji = document.getElementById('wiz-tt-emoji')?.value.trim();
+      const description = document.getElementById('wiz-tt-desc')?.value.trim();
+      const categoryName = document.getElementById('wiz-tt-category')?.value;
+      const handlerRoleName = document.getElementById('wiz-tt-role')?.value;
+      const color = document.getElementById('wiz-tt-color')?.value || '#5865f2';
+
+      if (!name || !emoji || !description || !categoryName || !handlerRoleName) {
+        return toast('Fill in all ticket type fields', true);
+      }
+
+      const id = name.toLowerCase().replace(/\s+/g, '-');
+      wizardData.ticketTypes.push({ id, name, emoji, description, categoryName, handlerRoleName, color });
+      renderSetupWizard();
+    }
+
+    function removeWizardTicketType(index) {
+      wizardData.ticketTypes.splice(index, 1);
+      renderSetupWizard();
     }
 
     function renderWizardStep5() {
@@ -1246,7 +1329,7 @@
           <div class="info-box">Template: <strong>${tpl.name}</strong> · ${enabledCats.length} categories · ${enabledChannels} channels · ${enabledRoles.length} roles
             ${wizardData.deleteExisting ? ' · <span style="color:var(--yellow)">Delete existing</span>' : ''}
             ${wizardData.enableVerification ? ` · Verification (${wizardData.verifyType})` : ''}
-            ${wizardData.enableTickets ? ' · Deploy ticket panel' : ''}</div>
+            ${wizardData.enableTickets ? ` · Tickets (${wizardData.ticketTypes.length} types)` : ''}</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
             <div class="review-section"><h4>📁 Categories & Channels</h4><ul class="review-list">${catsList}</ul></div>
             <div class="review-section"><h4>🎭 Roles</h4><ul class="review-list">${rolesList}</ul></div>
@@ -1339,25 +1422,67 @@
         } catch {}
 
         // Deploy ticket panel if enabled
-        if (wizardData.enableTickets) {
-          addLog('Deploying ticket panel...');
+        if (wizardData.enableTickets && wizardData.ticketTypes.length) {
+          addLog('Configuring ticket system...');
           try {
-            const ticketRes = await fetch(`${API}/api/tickets/deploy/${currentGuild}`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
-            const ticketData = await ticketRes.json();
-            if (ticketRes.ok) {
-              addLog(`Ticket panel ${ticketData.action}!`, 'success');
+            // Resolve channel/category/role names to IDs from refreshed guild data
+            const findChannelByName = (name) => currentGuildData?.channels?.find(c => c.name.replace(/^[^\w]*/, '').toLowerCase().includes(name.replace(/^[^\w]*/, '').toLowerCase()));
+            const findRoleByName = (name) => currentGuildData?.roles?.find(r => r.name === name);
+
+            // Find panel channel
+            const panelCh = findChannelByName(wizardData.ticketPanelChannelName);
+            if (!panelCh) {
+              addLog('Ticket panel: Could not find panel channel "' + wizardData.ticketPanelChannelName + '"', 'error');
             } else {
-              addLog('Ticket panel: ' + (ticketData.error || 'No ticket types configured — configure them in the Tickets page first'), 'error');
+              // Build ticket types with resolved IDs
+              const resolvedTypes = [];
+              for (const t of wizardData.ticketTypes) {
+                const cat = currentGuildData?.channels?.find(c => c.type === 4 && c.name.toLowerCase().includes(t.categoryName.replace(/^[^\w]*/, '').toLowerCase()));
+                const role = findRoleByName(t.handlerRoleName);
+                if (!cat) { addLog(`Ticket type "${t.name}": category "${t.categoryName}" not found, skipping`, 'error'); continue; }
+                if (!role) { addLog(`Ticket type "${t.name}": role "${t.handlerRoleName}" not found, skipping`, 'error'); continue; }
+                resolvedTypes.push({
+                  id: t.id,
+                  name: t.name,
+                  emoji: t.emoji,
+                  description: t.description,
+                  categoryId: cat.id,
+                  handlerRoleId: role.id,
+                  color: t.color,
+                });
+              }
+
+              if (resolvedTypes.length) {
+                // Save ticket config
+                await fetch(`${API}/api/tickets/config/${currentGuild}`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ panelChannelId: panelCh.id, types: resolvedTypes }),
+                });
+                addLog(`Ticket config saved (${resolvedTypes.length} types)`);
+
+                // Deploy the panel
+                addLog('Deploying ticket panel...');
+                const ticketRes = await fetch(`${API}/api/tickets/deploy/${currentGuild}`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+                const ticketData = await ticketRes.json();
+                if (ticketRes.ok) {
+                  addLog(`Ticket panel ${ticketData.action}!`, 'success');
+                } else {
+                  addLog('Ticket panel: ' + (ticketData.error || 'Deploy failed'), 'error');
+                }
+              } else {
+                addLog('No ticket types resolved — skipping deploy', 'error');
+              }
             }
           } catch (err) {
-            addLog('Ticket panel deploy error: ' + err.message, 'error');
+            addLog('Ticket setup error: ' + err.message, 'error');
           }
         }
 
         // Show restart button
         const nav = document.getElementById('wizard-exec-nav');
         nav.style.display = 'flex';
-        nav.innerHTML = '<button class="btn btn-ghost" onclick="wizardStep=1;wizardData={templateKey:null,categories:[],roles:[],deleteExisting:false,enableVerification:false,verifyType:\'puzzle\',enableTickets:false};renderSetupWizard()">🔄 New Setup</button><button class="btn btn-primary" onclick="showPage(\'server-info\')">View Server →</button>';
+        nav.innerHTML = '<button class="btn btn-ghost" onclick="wizardStep=1;wizardData={templateKey:null,categories:[],roles:[],deleteExisting:false,enableVerification:false,verifyType:\'puzzle\',enableTickets:false,ticketTypes:[],ticketPanelChannelName:\'\'};renderSetupWizard()">🔄 New Setup</button><button class="btn btn-primary" onclick="showPage(\'server-info\')">View Server →</button>';
       } catch (err) {
         addLog('Connection error: ' + err.message, 'error');
         btn.disabled = false;

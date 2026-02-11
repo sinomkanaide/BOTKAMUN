@@ -358,9 +358,14 @@ app.post("/api/setup-server", requireAuth, async (req, res) => {
 
       for (const ch of cat.channels) {
         if (!ch.enabled && ch.enabled !== undefined) continue;
+        let chType = CHANNEL_TYPES[ch.type] || CT.GuildText;
+        // Announcement channels require COMMUNITY feature
+        if (chType === CT.GuildAnnouncement && !guild.features.includes("COMMUNITY")) {
+          chType = CT.GuildText;
+        }
         const options = {
           name: ch.name,
-          type: CHANNEL_TYPES[ch.type] || CT.GuildText,
+          type: chType,
           parent: category.id,
           topic: ch.topic || undefined,
         };

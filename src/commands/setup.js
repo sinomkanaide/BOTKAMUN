@@ -332,9 +332,14 @@ const handlers = {
         addStatus(`   📁 Categoría: ${cat.name}`);
 
         for (const ch of cat.channels) {
+          let chType = CHANNEL_TYPES[ch.type] || ChannelType.GuildText;
+          // Announcement channels require COMMUNITY feature
+          if (chType === ChannelType.GuildAnnouncement && !interaction.guild.features.includes("COMMUNITY")) {
+            chType = ChannelType.GuildText;
+          }
           const options = {
             name: ch.name,
-            type: CHANNEL_TYPES[ch.type] || ChannelType.GuildText,
+            type: chType,
             parent: category.id,
             topic: ch.topic || undefined,
           };

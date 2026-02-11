@@ -112,6 +112,14 @@ app.get("/api/auth/callback", async (req, res) => {
   }
 });
 
+// ─── Bot Invite ───
+app.get("/api/bot/invite", (req, res) => {
+  const clientId = DISCORD_CLIENT_ID;
+  if (!clientId) return res.status(500).json({ error: "Client ID no configurado" });
+  const url = `https://discord.com/oauth2/authorize?client_id=${clientId}&permissions=8&scope=bot+applications.commands`;
+  res.redirect(url);
+});
+
 app.post("/api/logout", (req, res) => {
   req.session.destroy();
   res.json({ success: true });

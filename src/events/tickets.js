@@ -149,7 +149,7 @@ async function handleModal(interaction, client) {
     ticketConfigs.set(configKey, config);
 
     const ticketKey = `${interaction.guild.id}-${ticketNumber}`;
-    const channelName = `${type.emoji}-${ticketNumber}`.replace(/[^a-zA-Z0-9-]/g, "").toLowerCase() || `ticket-${ticketNumber}`;
+    const channelName = `${type.name}-${interaction.user.username}-${ticketNumber}`.replace(/[^a-zA-Z0-9-]/g, "-").replace(/-+/g, "-").toLowerCase();
 
     // Build permission overwrites
     const permissionOverwrites = [
@@ -190,10 +190,29 @@ async function handleModal(interaction, client) {
     }
 
     try {
+      // Ensure category exists, auto-create if needed
+      let parentId = type.categoryId || undefined;
+      if (parentId && !interaction.guild.channels.cache.get(parentId)) {
+        const existing = interaction.guild.channels.cache.find(
+          (c) => c.type === ChannelType.GuildCategory && c.name.toLowerCase() === type.name.toLowerCase()
+        );
+        if (existing) {
+          parentId = existing.id;
+        } else {
+          const newCat = await interaction.guild.channels.create({
+            name: type.name,
+            type: ChannelType.GuildCategory,
+          });
+          parentId = newCat.id;
+        }
+        type.categoryId = parentId;
+        ticketConfigs.set(configKey, config);
+      }
+
       const channel = await interaction.guild.channels.create({
         name: channelName,
         type: ChannelType.GuildText,
-        parent: type.categoryId || undefined,
+        parent: parentId,
         permissionOverwrites,
       });
 

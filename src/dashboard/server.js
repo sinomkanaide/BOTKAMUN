@@ -551,13 +551,33 @@ app.post("/api/tickets/deploy/:guildId", requireAuth, async (req, res) => {
   if (!config.panelChannelId) return res.status(400).json({ error: "No panel channel configured" });
 
   try {
-    const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
+    const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ChannelType } = require("discord.js");
 
     const guild = botClient.guilds.cache.get(req.params.guildId);
     if (!guild) return res.status(404).json({ error: "Guild not found" });
 
     const channel = await guild.channels.fetch(config.panelChannelId);
     if (!channel) return res.status(404).json({ error: "Panel channel not found" });
+
+    // Auto-create categories for each ticket type
+    for (const type of config.types) {
+      let category = type.categoryId
+        ? guild.channels.cache.get(type.categoryId)
+        : null;
+      if (!category) {
+        category = guild.channels.cache.find(
+          (c) => c.type === ChannelType.GuildCategory && c.name.toLowerCase() === type.name.toLowerCase()
+        );
+      }
+      if (!category) {
+        category = await guild.channels.create({
+          name: type.name,
+          type: ChannelType.GuildCategory,
+        });
+      }
+      type.categoryId = category.id;
+    }
+    ticketConfigs.set(configKey, config);
 
     const typesDescription = config.types
       .map((t) => `${t.emoji} **${t.name}** — ${t.description}`)

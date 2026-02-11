@@ -955,13 +955,12 @@
             <td><code>${t.id}</code></td>
             <td>${t.emoji} ${t.name}</td>
             <td>${t.description}</td>
-            <td>${currentGuildData?.channels.find(c => c.id === t.categoryId)?.name || t.categoryId || '-'}</td>
             <td>${currentGuildData?.roles.find(r => r.id === t.handlerRoleId)?.name || t.handlerRoleId || '-'}</td>
             <td><span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:${t.color || '#5865f2'};vertical-align:middle"></span> ${t.color || '#5865f2'}</td>
             <td><button class="btn btn-danger btn-sm" onclick="deleteTicketType('${t.id}')">Delete</button></td>
           </tr>`).join('');
       } else {
-        typesHtml = '<tr><td colspan="7" style="text-align:center;color:var(--text-secondary)">No ticket types configured. Add one below.</td></tr>';
+        typesHtml = '<tr><td colspan="6" style="text-align:center;color:var(--text-secondary)">No ticket types configured. Add one below.</td></tr>';
       }
 
       // Open tickets table
@@ -1005,7 +1004,7 @@
         <div class="card">
           <h3>📋 Ticket Types</h3>
           <table>
-            <thead><tr><th>ID</th><th>Name</th><th>Description</th><th>Category</th><th>Handler Role</th><th>Color</th><th>Actions</th></tr></thead>
+            <thead><tr><th>ID</th><th>Name</th><th>Description</th><th>Handler Role</th><th>Color</th><th>Actions</th></tr></thead>
             <tbody>${typesHtml}</tbody>
           </table>
         </div>
@@ -1017,7 +1016,6 @@
             <div class="form-group"><label>Name</label><input type="text" id="tt-name" placeholder="e.g. Support"></div>
             <div class="form-group"><label>Emoji</label><input type="text" id="tt-emoji" placeholder="e.g. 🎫"></div>
             <div class="form-group"><label>Color</label><input type="color" id="tt-color" value="#5865f2"></div>
-            <div class="form-group"><label>Category</label><select id="tt-category">${categoryOptions()}</select></div>
             <div class="form-group"><label>Handler Role</label><select id="tt-role">${roleOptions()}</select></div>
           </div>
           <div class="form-group"><label>Description</label><input type="text" id="tt-desc" placeholder="Short description shown on the panel"></div>
@@ -1066,15 +1064,14 @@
       const name = document.getElementById('tt-name').value.trim();
       const emoji = document.getElementById('tt-emoji').value.trim();
       const description = document.getElementById('tt-desc').value.trim();
-      const categoryId = document.getElementById('tt-category').value;
       const handlerRoleId = document.getElementById('tt-role').value;
       const color = document.getElementById('tt-color').value;
 
-      if (!id || !name || !emoji || !description || !categoryId || !handlerRoleId) return toast('Fill in all fields', true);
+      if (!id || !name || !emoji || !description || !handlerRoleId) return toast('Fill in all fields', true);
 
       const types = [...(ticketConfig.types || [])];
       const idx = types.findIndex(t => t.id === id);
-      const typeData = { id, name, emoji, description, categoryId, handlerRoleId, color };
+      const typeData = { id, name, emoji, description, handlerRoleId, color };
       if (idx >= 0) types[idx] = typeData;
       else types.push(typeData);
 
@@ -1234,10 +1231,6 @@
       });
       const channelOpts = channelNames.map(n => `<option value="${n}" ${wizardData.ticketPanelChannelName === n ? 'selected' : ''}>${n}</option>`).join('');
 
-      // Build category options from enabled categories
-      const catNames = wizardData.categories.filter(c => c.enabled).map(c => c.name);
-      const catOpts = catNames.map(n => `<option value="${n}">${n}</option>`).join('');
-
       // Build role options from enabled roles
       const roleNames = wizardData.roles.filter(r => r.enabled).map(r => r.name);
       const roleOpts = roleNames.map(n => `<option value="${n}">${n}</option>`).join('');
@@ -1247,7 +1240,7 @@
       if (wizardData.ticketTypes.length) {
         typesHtml = '<div style="margin-bottom:12px">' + wizardData.ticketTypes.map((t, i) => `
           <div class="toggle-row">
-            <label>${t.emoji} <strong>${t.name}</strong> — ${t.description} <span style="color:var(--text-secondary);font-size:12px">(${t.categoryName} / ${t.handlerRoleName})</span></label>
+            <label>${t.emoji} <strong>${t.name}</strong> — ${t.description} <span style="color:var(--text-secondary);font-size:12px">(${t.handlerRoleName})</span></label>
             <button class="btn btn-danger btn-sm" onclick="removeWizardTicketType(${i})">Remove</button>
           </div>`).join('') + '</div>';
       }
@@ -1267,11 +1260,6 @@
             <div class="form-grid">
               <div class="form-group"><label>Name</label><input type="text" id="wiz-tt-name" placeholder="e.g. Support"></div>
               <div class="form-group"><label>Emoji</label><input type="text" id="wiz-tt-emoji" placeholder="e.g. 🎫" style="width:80px"></div>
-              <div class="form-group"><label>Category (where tickets are created)</label>
-                <select id="wiz-tt-category" style="width:100%;padding:10px 14px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:14px">
-                  <option value="">Select category...</option>${catOpts}
-                </select>
-              </div>
               <div class="form-group"><label>Handler role</label>
                 <select id="wiz-tt-role" style="width:100%;padding:10px 14px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:14px">
                   <option value="">Select role...</option>${roleOpts}
@@ -1289,16 +1277,15 @@
       const name = document.getElementById('wiz-tt-name')?.value.trim();
       const emoji = document.getElementById('wiz-tt-emoji')?.value.trim();
       const description = document.getElementById('wiz-tt-desc')?.value.trim();
-      const categoryName = document.getElementById('wiz-tt-category')?.value;
       const handlerRoleName = document.getElementById('wiz-tt-role')?.value;
       const color = document.getElementById('wiz-tt-color')?.value || '#5865f2';
 
-      if (!name || !emoji || !description || !categoryName || !handlerRoleName) {
+      if (!name || !emoji || !description || !handlerRoleName) {
         return toast('Fill in all ticket type fields', true);
       }
 
       const id = name.toLowerCase().replace(/\s+/g, '-');
-      wizardData.ticketTypes.push({ id, name, emoji, description, categoryName, handlerRoleName, color });
+      wizardData.ticketTypes.push({ id, name, emoji, description, handlerRoleName, color });
       renderSetupWizard();
     }
 
@@ -1434,19 +1421,16 @@
             if (!panelCh) {
               addLog('Ticket panel: Could not find panel channel "' + wizardData.ticketPanelChannelName + '"', 'error');
             } else {
-              // Build ticket types with resolved IDs
+              // Build ticket types with resolved IDs (categories are auto-created on deploy)
               const resolvedTypes = [];
               for (const t of wizardData.ticketTypes) {
-                const cat = currentGuildData?.channels?.find(c => c.type === 4 && c.name.toLowerCase().includes(t.categoryName.replace(/^[^\w]*/, '').toLowerCase()));
                 const role = findRoleByName(t.handlerRoleName);
-                if (!cat) { addLog(`Ticket type "${t.name}": category "${t.categoryName}" not found, skipping`, 'error'); continue; }
                 if (!role) { addLog(`Ticket type "${t.name}": role "${t.handlerRoleName}" not found, skipping`, 'error'); continue; }
                 resolvedTypes.push({
                   id: t.id,
                   name: t.name,
                   emoji: t.emoji,
                   description: t.description,
-                  categoryId: cat.id,
                   handlerRoleId: role.id,
                   color: t.color,
                 });

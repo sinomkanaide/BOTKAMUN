@@ -4,6 +4,7 @@ const {
   EmbedBuilder,
   ActionRowBuilder,
   StringSelectMenuBuilder,
+  ChannelType,
 } = require("discord.js");
 const { ticketConfigs } = require("../utils/database");
 
@@ -23,7 +24,6 @@ const definitions = [
     .addStringOption((o) => o.setName("name").setDescription("Display name").setRequired(true))
     .addStringOption((o) => o.setName("emoji").setDescription("Emoji for the button").setRequired(true))
     .addStringOption((o) => o.setName("description").setDescription("Short description shown on panel").setRequired(true))
-    .addChannelOption((o) => o.setName("category").setDescription("Category to create ticket channels in").setRequired(true))
     .addRoleOption((o) => o.setName("handler_role").setDescription("Role that handles this ticket type").setRequired(true))
     .addStringOption((o) => o.setName("color").setDescription("Hex color (e.g. #5865f2)").setRequired(false))
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
@@ -71,7 +71,6 @@ const handlers = {
     const name = interaction.options.getString("name");
     const emoji = interaction.options.getString("emoji");
     const description = interaction.options.getString("description");
-    const category = interaction.options.getChannel("category");
     const handlerRole = interaction.options.getRole("handler_role");
     const color = interaction.options.getString("color") || "#5865f2";
 
@@ -80,7 +79,6 @@ const handlers = {
       name,
       emoji,
       description,
-      categoryId: category.id,
       handlerRoleId: handlerRole.id,
       color,
     };
@@ -95,7 +93,7 @@ const handlers = {
     ticketConfigs.set(configKey, config);
 
     return interaction.reply({
-      content: `Ticket type **${emoji} ${name}** (${typeId}) ${idx >= 0 ? "updated" : "added"}!\nCategory: ${category} | Handler: @${handlerRole.name}\nUse \`/deploytickets\` to update the panel.`,
+      content: `Ticket type **${emoji} ${name}** (${typeId}) ${idx >= 0 ? "updated" : "added"}!\nHandler: @${handlerRole.name} | Category will be auto-created on deploy.\nUse \`/deploytickets\` to update the panel.`,
       ephemeral: true,
     });
   },
@@ -129,6 +127,26 @@ const handlers = {
       if (!channel) {
         return interaction.editReply({ content: "Panel channel not found." });
       }
+
+      // Auto-create categories for each ticket type
+      for (const type of config.types) {
+        let category = type.categoryId
+          ? interaction.guild.channels.cache.get(type.categoryId)
+          : null;
+        if (!category) {
+          category = interaction.guild.channels.cache.find(
+            (c) => c.type === ChannelType.GuildCategory && c.name.toLowerCase() === type.name.toLowerCase()
+          );
+        }
+        if (!category) {
+          category = await interaction.guild.channels.create({
+            name: type.name,
+            type: ChannelType.GuildCategory,
+          });
+        }
+        type.categoryId = category.id;
+      }
+      ticketConfigs.set(configKey, config);
 
       // Build panel embed
       const typesDescription = config.types

@@ -3,8 +3,7 @@ const {
   PermissionFlagsBits,
   EmbedBuilder,
   ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
+  StringSelectMenuBuilder,
 } = require("discord.js");
 const { ticketConfigs } = require("../utils/database");
 
@@ -140,28 +139,25 @@ const handlers = {
         .setColor(0x5865f2)
         .setTitle("Support Tickets")
         .setDescription(
-          `Need help? Open a ticket by clicking the appropriate button below.\n\n${typesDescription}`
+          `Need help? Select a ticket type from the menu below.\n\n${typesDescription}`
         )
-        .setFooter({ text: "Click a button to open a ticket" })
+        .setFooter({ text: "Select from the dropdown to open a ticket" })
         .setTimestamp();
 
-      // Build button rows (max 5 buttons per row)
-      const rows = [];
-      let currentRow = new ActionRowBuilder();
-      for (let i = 0; i < config.types.length; i++) {
-        const t = config.types[i];
-        const color = t.color ? parseInt(String(t.color).replace("#", ""), 16) : 0x5865f2;
-        currentRow.addComponents(
-          new ButtonBuilder()
-            .setCustomId(`ticket_open_${t.id}`)
-            .setLabel(`${t.emoji} ${t.name}`)
-            .setStyle(ButtonStyle.Secondary)
+      // Build dropdown select menu
+      const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId("ticket_select")
+        .setPlaceholder("Select a ticket type...")
+        .addOptions(
+          config.types.map((t) => ({
+            label: t.name,
+            description: t.description,
+            emoji: t.emoji,
+            value: t.id,
+          }))
         );
-        if ((i + 1) % 5 === 0 || i === config.types.length - 1) {
-          rows.push(currentRow);
-          currentRow = new ActionRowBuilder();
-        }
-      }
+
+      const rows = [new ActionRowBuilder().addComponents(selectMenu)];
 
       // Edit existing or send new
       if (config.panelMessageId) {

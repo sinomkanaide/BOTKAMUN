@@ -122,6 +122,13 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 
+  // Select menus
+  if (interaction.isStringSelectMenu()) {
+    if (interaction.customId === "ticket_select") {
+      ticketEvents.handleSelectMenu(interaction, client);
+    }
+  }
+
   // Modals
   if (interaction.isModalSubmit()) {
     if (interaction.customId.startsWith("ticket_")) {

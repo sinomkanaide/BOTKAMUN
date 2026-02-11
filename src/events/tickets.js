@@ -309,4 +309,45 @@ async function handleModal(interaction, client) {
   }
 }
 
-module.exports = { handleButton, handleModal };
+async function handleSelectMenu(interaction, client) {
+  if (interaction.customId !== "ticket_select") return;
+
+  const typeId = interaction.values[0];
+  const configKey = `guild-${interaction.guild.id}`;
+  const config = ticketConfigs.get(configKey);
+  if (!config) {
+    return interaction.reply({ content: "Ticket system is not configured.", ephemeral: true });
+  }
+
+  const type = config.types.find((t) => t.id === typeId);
+  if (!type) {
+    return interaction.reply({ content: "This ticket type no longer exists.", ephemeral: true });
+  }
+
+  // Check for duplicate open ticket of this type
+  const allTickets = tickets.getAll();
+  const duplicate = Object.values(allTickets).find(
+    (t) => t.guildId === interaction.guild.id && t.userId === interaction.user.id && t.typeId === typeId && t.status !== "closed"
+  );
+  if (duplicate) {
+    return interaction.reply({ content: `You already have an open **${type.name}** ticket: <#${duplicate.channelId}>`, ephemeral: true });
+  }
+
+  // Show description modal
+  const modal = new ModalBuilder()
+    .setCustomId(`ticket_modal_${typeId}`)
+    .setTitle(`${type.emoji} ${type.name} Ticket`);
+
+  const descInput = new TextInputBuilder()
+    .setCustomId("description")
+    .setLabel("Describe your request")
+    .setPlaceholder("Provide details about your request...")
+    .setStyle(TextInputStyle.Paragraph)
+    .setRequired(true)
+    .setMaxLength(1000);
+
+  modal.addComponents(new ActionRowBuilder().addComponents(descInput));
+  return interaction.showModal(modal);
+}
+
+module.exports = { handleButton, handleModal, handleSelectMenu };

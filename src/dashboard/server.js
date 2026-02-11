@@ -551,7 +551,7 @@ app.post("/api/tickets/deploy/:guildId", requireAuth, async (req, res) => {
   if (!config.panelChannelId) return res.status(400).json({ error: "No panel channel configured" });
 
   try {
-    const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+    const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
 
     const guild = botClient.guilds.cache.get(req.params.guildId);
     if (!guild) return res.status(404).json({ error: "Guild not found" });
@@ -566,25 +566,23 @@ app.post("/api/tickets/deploy/:guildId", requireAuth, async (req, res) => {
     const embed = new EmbedBuilder()
       .setColor(0x5865f2)
       .setTitle("Support Tickets")
-      .setDescription(`Need help? Open a ticket by clicking the appropriate button below.\n\n${typesDescription}`)
-      .setFooter({ text: "Click a button to open a ticket" })
+      .setDescription(`Need help? Select a ticket type from the menu below.\n\n${typesDescription}`)
+      .setFooter({ text: "Select from the dropdown to open a ticket" })
       .setTimestamp();
 
-    const rows = [];
-    let currentRow = new ActionRowBuilder();
-    for (let i = 0; i < config.types.length; i++) {
-      const t = config.types[i];
-      currentRow.addComponents(
-        new ButtonBuilder()
-          .setCustomId(`ticket_open_${t.id}`)
-          .setLabel(`${t.emoji} ${t.name}`)
-          .setStyle(ButtonStyle.Secondary)
+    const selectMenu = new StringSelectMenuBuilder()
+      .setCustomId("ticket_select")
+      .setPlaceholder("Select a ticket type...")
+      .addOptions(
+        config.types.map((t) => ({
+          label: t.name,
+          description: t.description,
+          emoji: t.emoji,
+          value: t.id,
+        }))
       );
-      if ((i + 1) % 5 === 0 || i === config.types.length - 1) {
-        rows.push(currentRow);
-        currentRow = new ActionRowBuilder();
-      }
-    }
+
+    const rows = [new ActionRowBuilder().addComponents(selectMenu)];
 
     if (config.panelMessageId) {
       try {

@@ -63,14 +63,14 @@ async function handleButton(interaction, client) {
 
     const embed = new EmbedBuilder()
       .setColor(0xd4a843)
-      .setTitle("🔱 Verificación de Wallet")
+      .setTitle("🔱 Wallet Verification")
       .setDescription(
-        `Haz clic en el enlace para conectar tu wallet y reclamar tu rango.\n\n` +
-        `**[➡️ Conectar Wallet](${verifyUrl})**\n\n` +
-        `⏰ Este enlace expira en **10 minutos**.\n` +
-        `🔒 Solo tú puedes usarlo.`
+        `Click the link to connect your wallet and claim your rank.\n\n` +
+        `**[➡️ Connect Wallet](${verifyUrl})**\n\n` +
+        `⏰ This link expires in **10 minutes**.\n` +
+        `🔒 Only you can use it.`
       )
-      .setFooter({ text: "Deberás firmar un mensaje con MetaMask para verificar tu identidad" })
+      .setFooter({ text: "You will need to sign a message with MetaMask to verify your identity" })
       .setTimestamp();
 
     return interaction.reply({ embeds: [embed], ephemeral: true });
@@ -91,25 +91,25 @@ async function handleButton(interaction, client) {
 
     const embed = new EmbedBuilder()
       .setColor(currentRank ? currentRank.color : 0x6d6d6d)
-      .setTitle(`📊 Tu Rango en el Imperio`)
+      .setTitle(`📊 Your Rank in the Empire`)
       .addFields(
         {
-          name: "Rango actual",
-          value: currentRank ? `${currentRank.name}` : "⛓️ Sin rango",
+          name: "Current rank",
+          value: currentRank ? `${currentRank.name}` : "⛓️ No rank",
           inline: true,
         },
         {
-          name: "Wallet vinculada",
+          name: "Linked wallet",
           value: walletData
             ? `\`${walletData.wallet.slice(0, 6)}...${walletData.wallet.slice(-4)}\``
-            : "No vinculada",
+            : "Not linked",
           inline: true,
         },
         {
-          name: "Último claim",
+          name: "Last claim",
           value: walletData?.lastClaim
             ? `<t:${Math.floor(new Date(walletData.lastClaim).getTime() / 1000)}:R>`
-            : "Nunca",
+            : "Never",
           inline: true,
         }
       )
@@ -121,11 +121,11 @@ async function handleButton(interaction, client) {
       const nextRank = gameRanks.find((r) => r.level > walletData.lastLevel);
       if (nextRank) {
         embed.addFields({
-          name: "Próximo rango",
-          value: `${nextRank.name} — necesitas nivel **${nextRank.level}** (tienes **${walletData.lastLevel}**)`,
+          name: "Next rank",
+          value: `${nextRank.name} — need level **${nextRank.level}** (you have **${walletData.lastLevel}**)`,
         });
       } else {
-        embed.addFields({ name: "Estado", value: "🏆 ¡Has alcanzado el rango máximo!" });
+        embed.addFields({ name: "Status", value: "🏆 You have reached the highest rank!" });
       }
     }
 

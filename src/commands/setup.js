@@ -4,6 +4,7 @@ const {
   ChannelType,
   EmbedBuilder,
 } = require("discord.js");
+const { ROLE_PERMISSIONS } = require("./egypt-roles");
 
 // Server templates
 const templates = {
@@ -58,14 +59,14 @@ const templates = {
       },
     ],
     roles: [
-      { name: "☀️ Faraón", color: 0xffd700, hoist: true },
-      { name: "🐍 Visir", color: 0xe74c3c, hoist: true },
-      { name: "🔱 Sumo Sacerdote", color: 0xf1c40f, hoist: true },
+      { name: "☀️ Pharaoh", color: 0xffd700, hoist: true },
+      { name: "🐍 Vizier", color: 0xe74c3c, hoist: true },
+      { name: "🔱 High Priest", color: 0xf1c40f, hoist: true },
       { name: "📜 Scribe", color: 0x9b59b6, hoist: true },
       { name: "🏛️ Official", color: 0x4a90d9, hoist: true },
       { name: "⚒️ Craftsman", color: 0xcd7f32, hoist: true },
-      { name: "🏺 Ciudadano de Egipto", color: 0xc8a96e },
-      { name: "⛓️ Esclavo", color: 0x6d6d6d },
+      { name: "🏺 Citizen", color: 0xc8a96e },
+      { name: "⛓️ Slave", color: 0x6d6d6d },
     ],
   },
 
@@ -117,14 +118,14 @@ const templates = {
       },
     ],
     roles: [
-      { name: "☀️ Faraón", color: 0xffd700, hoist: true },
-      { name: "🐍 Visir", color: 0xe74c3c, hoist: true },
-      { name: "🔱 Sumo Sacerdote", color: 0xf1c40f, hoist: true },
+      { name: "☀️ Pharaoh", color: 0xffd700, hoist: true },
+      { name: "🐍 Vizier", color: 0xe74c3c, hoist: true },
+      { name: "🔱 High Priest", color: 0xf1c40f, hoist: true },
       { name: "📜 Scribe", color: 0x9b59b6, hoist: true },
       { name: "🏛️ Official", color: 0x4a90d9, hoist: true },
       { name: "⚒️ Craftsman", color: 0xcd7f32, hoist: true },
-      { name: "🏺 Ciudadano de Egipto", color: 0xc8a96e },
-      { name: "⛓️ Esclavo", color: 0x6d6d6d },
+      { name: "🏺 Citizen", color: 0xc8a96e },
+      { name: "⛓️ Slave", color: 0x6d6d6d },
     ],
   },
 
@@ -174,14 +175,14 @@ const templates = {
       },
     ],
     roles: [
-      { name: "☀️ Faraón", color: 0xffd700, hoist: true },
-      { name: "🐍 Visir", color: 0xe74c3c, hoist: true },
-      { name: "🔱 Sumo Sacerdote", color: 0xf1c40f, hoist: true },
+      { name: "☀️ Pharaoh", color: 0xffd700, hoist: true },
+      { name: "🐍 Vizier", color: 0xe74c3c, hoist: true },
+      { name: "🔱 High Priest", color: 0xf1c40f, hoist: true },
       { name: "📜 Scribe", color: 0x9b59b6, hoist: true },
       { name: "🏛️ Official", color: 0x4a90d9, hoist: true },
       { name: "⚒️ Craftsman", color: 0xcd7f32, hoist: true },
-      { name: "🏺 Ciudadano de Egipto", color: 0xc8a96e },
-      { name: "⛓️ Esclavo", color: 0x6d6d6d },
+      { name: "🏺 Citizen", color: 0xc8a96e },
+      { name: "⛓️ Slave", color: 0x6d6d6d },
     ],
   },
 
@@ -248,14 +249,14 @@ const templates = {
       },
     ],
     roles: [
-      { name: "☀️ Faraón", color: 0xffd700, hoist: true },
-      { name: "🐍 Visir", color: 0xe74c3c, hoist: true },
-      { name: "🔱 Sumo Sacerdote", color: 0xf1c40f, hoist: true },
+      { name: "☀️ Pharaoh", color: 0xffd700, hoist: true },
+      { name: "🐍 Vizier", color: 0xe74c3c, hoist: true },
+      { name: "🔱 High Priest", color: 0xf1c40f, hoist: true },
       { name: "📜 Scribe", color: 0x9b59b6, hoist: true },
       { name: "🏛️ Official", color: 0x4a90d9, hoist: true },
       { name: "⚒️ Craftsman", color: 0xcd7f32, hoist: true },
-      { name: "🏺 Ciudadano de Egipto", color: 0xc8a96e },
-      { name: "⛓️ Esclavo", color: 0x6d6d6d },
+      { name: "🏺 Citizen", color: 0xc8a96e },
+      { name: "⛓️ Slave", color: 0x6d6d6d },
     ],
   },
 };
@@ -263,9 +264,9 @@ const templates = {
 const definitions = [
   new SlashCommandBuilder()
     .setName("setup")
-    .setDescription("Crea la estructura completa del servidor (canales, roles, categorías)")
+    .setDescription("Create the full server structure (channels, roles, categories)")
     .addStringOption((o) =>
-      o.setName("plantilla").setDescription("Plantilla de servidor").setRequired(true)
+      o.setName("template").setDescription("Server template").setRequired(true)
         .addChoices(
           { name: "🎮 Gaming", value: "gaming" },
           { name: "🌍 Community", value: "community" },
@@ -274,7 +275,7 @@ const definitions = [
         )
     )
     .addBooleanOption((o) =>
-      o.setName("borrar_existentes").setDescription("¿Borrar canales existentes? (⚠️ irreversible)").setRequired(true)
+      o.setName("delete_existing").setDescription("Delete existing channels? (irreversible)").setRequired(true)
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 ];
@@ -288,8 +289,8 @@ const CHANNEL_TYPES = {
 
 const handlers = {
   async setup(interaction) {
-    const templateKey = interaction.options.getString("plantilla");
-    const deleteExisting = interaction.options.getBoolean("borrar_existentes");
+    const templateKey = interaction.options.getString("template");
+    const deleteExisting = interaction.options.getBoolean("delete_existing");
     const template = templates[templateKey];
 
     await interaction.deferReply({ ephemeral: true });
@@ -298,45 +299,55 @@ const handlers = {
     const addStatus = (msg) => statusLines.push(msg);
 
     try {
-      // 1. Borrar canales existentes si se pidió
+      // 1. Delete existing channels if requested
       if (deleteExisting) {
-        addStatus("🗑️ Eliminando canales existentes...");
+        addStatus("🗑️ Deleting existing channels...");
         const channels = interaction.guild.channels.cache.filter(
           (c) => c.id !== interaction.channel.id
         );
         for (const [, ch] of channels) {
           try { await ch.delete(); } catch {}
         }
-        addStatus(`   ✅ Eliminados ${channels.size} canales`);
+        addStatus(`   ✅ Deleted ${channels.size} channels`);
       }
 
-      // 2. Crear roles
-      addStatus("\n🎭 Creando roles...");
+      // 2. Create roles
+      addStatus("\n🎭 Creating roles...");
       const createdRoles = {};
       for (const roleData of template.roles) {
         const existing = interaction.guild.roles.cache.find((r) => r.name === roleData.name);
         if (existing) {
           createdRoles[roleData.name] = existing;
-          addStatus(`   ⏭️ Rol "${roleData.name}" ya existe`);
+          addStatus(`   ⏭️ Role "${roleData.name}" already exists`);
         } else {
+          const perms = ROLE_PERMISSIONS[roleData.name] || [];
           const role = await interaction.guild.roles.create({
             name: roleData.name,
             color: roleData.color,
             hoist: roleData.hoist || false,
+            permissions: perms,
           });
           createdRoles[roleData.name] = role;
-          addStatus(`   ✅ Rol "${roleData.name}" creado`);
+          addStatus(`   ✅ Role "${roleData.name}" created`);
         }
       }
 
-      // 3. Crear categorías y canales
-      addStatus("\n📁 Creando estructura de canales...");
+      // Identify key roles for channel permissions
+      const slaveRole = Object.entries(createdRoles).find(([n]) => n.includes("Slave"))?.[1];
+      const citizenRole = Object.entries(createdRoles).find(([n]) => n.includes("Citizen"))?.[1];
+      const staffRoleNames = ["Pharaoh", "Vizier", "High Priest"];
+      const staffRoles = Object.entries(createdRoles)
+        .filter(([n]) => staffRoleNames.some((s) => n.includes(s)))
+        .map(([, r]) => r);
+
+      // 3. Create categories and channels
+      addStatus("\n📁 Creating channel structure...");
       for (const cat of template.categories) {
         const category = await interaction.guild.channels.create({
           name: cat.name,
           type: ChannelType.GuildCategory,
         });
-        addStatus(`   📁 Categoría: ${cat.name}`);
+        addStatus(`   📁 Category: ${cat.name}`);
 
         for (const ch of cat.channels) {
           let chType = CHANNEL_TYPES[ch.type] || ChannelType.GuildText;
@@ -353,16 +364,48 @@ const handlers = {
 
           const channel = await interaction.guild.channels.create(options);
 
-          // Si es staff only, restringir acceso
+          const isVerifyChannel = ch.name.includes("verification") || ch.name.includes("access");
+
+          // Apply permission overwrites
+          // @everyone: deny ViewChannel on all channels
+          await channel.permissionOverwrites.edit(interaction.guild.roles.everyone, {
+            ViewChannel: false,
+          });
+
           if (ch.staffOnly) {
-            await channel.permissionOverwrites.edit(interaction.guild.roles.everyone, {
-              ViewChannel: false,
-            });
-            // Dar acceso a roles de admin/mod
-            for (const [name, role] of Object.entries(createdRoles)) {
-              if (name.includes("Faraón") || name.includes("Visir") || name.includes("Admin") || name.includes("Mod")) {
-                await channel.permissionOverwrites.edit(role, { ViewChannel: true });
-              }
+            // Staff-only channels: only Pharaoh/Vizier/High Priest
+            for (const staffRole of staffRoles) {
+              await channel.permissionOverwrites.edit(staffRole, { ViewChannel: true });
+            }
+          } else if (isVerifyChannel) {
+            // Verification channel: Slave can see, Citizen cannot, Staff can see
+            if (slaveRole) {
+              await channel.permissionOverwrites.edit(slaveRole, {
+                ViewChannel: true,
+                ReadMessageHistory: true,
+                SendMessages: true,
+              });
+            }
+            if (citizenRole) {
+              await channel.permissionOverwrites.edit(citizenRole, {
+                ViewChannel: false,
+              });
+            }
+            for (const staffRole of staffRoles) {
+              await channel.permissionOverwrites.edit(staffRole, { ViewChannel: true });
+            }
+          } else {
+            // Normal channels: Citizen can see, Staff can see
+            if (citizenRole) {
+              await channel.permissionOverwrites.edit(citizenRole, {
+                ViewChannel: true,
+                SendMessages: true,
+                ReadMessageHistory: true,
+                AttachFiles: true,
+              });
+            }
+            for (const staffRole of staffRoles) {
+              await channel.permissionOverwrites.edit(staffRole, { ViewChannel: true });
             }
           }
 
@@ -370,44 +413,44 @@ const handlers = {
         }
       }
 
-      // 4. Enviar reglas en el canal de reglas
+      // 4. Post rules in the rules channel
       const rulesChannel = interaction.guild.channels.cache.find(
         (c) => (c.name.includes("rules") || c.name.includes("reglas")) && c.type === ChannelType.GuildText
       );
       if (rulesChannel) {
         const rulesEmbed = new EmbedBuilder()
           .setColor(0x5865f2)
-          .setTitle("📜 Reglas del Servidor")
+          .setTitle("📜 Server Rules")
           .setDescription(
-            "**1.** Sé respetuoso con todos los miembros\n" +
-            "**2.** No spam ni flood\n" +
-            "**3.** No contenido NSFW fuera de canales designados\n" +
-            "**4.** No publicidad sin permiso\n" +
-            "**5.** Sigue las instrucciones del staff\n" +
-            "**6.** Usa los canales apropiados para cada tema\n" +
-            "**7.** No compartas información personal de otros\n" +
-            "**8.** Diviértete y sé parte de la comunidad 🎉\n\n" +
-            "_El incumplimiento puede resultar en advertencias, mute o ban._"
+            "**1.** Be respectful to all members\n" +
+            "**2.** No spam or flooding\n" +
+            "**3.** No NSFW content outside designated channels\n" +
+            "**4.** No advertising without permission\n" +
+            "**5.** Follow staff instructions\n" +
+            "**6.** Use the appropriate channels for each topic\n" +
+            "**7.** Do not share other people's personal information\n" +
+            "**8.** Have fun and be part of the community 🎉\n\n" +
+            "_Violations may result in warnings, mute or ban._"
           )
-          .setFooter({ text: "Última actualización" })
+          .setFooter({ text: "Last updated" })
           .setTimestamp();
         await rulesChannel.send({ embeds: [rulesEmbed] });
-        addStatus("\n📜 Reglas publicadas");
+        addStatus("\n📜 Rules posted");
       }
 
-      addStatus(`\n✅ ¡Servidor configurado con la plantilla **${template.name}**!`);
+      addStatus(`\n✅ Server configured with the **${template.name}** template!`);
 
       const resultEmbed = new EmbedBuilder()
         .setColor(0x57f287)
-        .setTitle("🏗️ Setup Completado")
+        .setTitle("🏗️ Setup Complete")
         .setDescription(statusLines.join("\n"))
         .setTimestamp();
 
       await interaction.editReply({ embeds: [resultEmbed] });
     } catch (error) {
-      console.error("Error en setup:", error);
+      console.error("Error in setup:", error);
       await interaction.editReply({
-        content: `❌ Error durante el setup: ${error.message}\n\nProgreso:\n${statusLines.join("\n")}`,
+        content: `❌ Error during setup: ${error.message}\n\nProgress:\n${statusLines.join("\n")}`,
       });
     }
   },

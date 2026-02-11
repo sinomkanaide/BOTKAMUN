@@ -2,7 +2,7 @@ const { EmbedBuilder } = require("discord.js");
 const { settings } = require("../utils/database");
 
 async function onMemberJoin(member, client) {
-  // Buscar canal de bienvenida configurado o por nombre
+  // Find configured or auto-detected welcome channel
   const welcomeChannelId = process.env.WELCOME_CHANNEL_ID;
   let channel = null;
 
@@ -13,8 +13,9 @@ async function onMemberJoin(member, client) {
   if (!channel) {
     channel = member.guild.channels.cache.find(
       (c) =>
-        c.name.includes("bienvenida") ||
         c.name.includes("welcome") ||
+        c.name.includes("introductions") ||
+        c.name.includes("bienvenida") ||
         c.name.includes("presentaciones")
     );
   }
@@ -23,11 +24,11 @@ async function onMemberJoin(member, client) {
 
   const embed = new EmbedBuilder()
     .setColor(0x57f287)
-    .setTitle("👋 ¡Bienvenido/a!")
+    .setTitle("👋 Welcome!")
     .setDescription(
-      `¡Hola ${member}! Bienvenido/a a **${member.guild.name}**.\n\n` +
-        `Eres el miembro #${member.guild.memberCount}.\n` +
-        `Revisa las reglas y disfruta tu estancia.`
+      `Hello ${member}! Welcome to **${member.guild.name}**.\n\n` +
+        `You are member #${member.guild.memberCount}.\n` +
+        `Check the rules and enjoy your stay.`
     )
     .setThumbnail(member.user.displayAvatarURL({ size: 256 }))
     .setFooter({ text: `ID: ${member.id}` })

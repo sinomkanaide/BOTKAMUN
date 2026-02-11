@@ -1101,7 +1101,7 @@
     // ─── Setup Wizard ───
     let wizardStep = 1;
     let wizardTemplates = null;
-    let wizardData = { templateKey: null, categories: [], roles: [], deleteExisting: false, enableVerification: false, verifyType: 'puzzle' };
+    let wizardData = { templateKey: null, categories: [], roles: [], deleteExisting: false, enableVerification: false, verifyType: 'puzzle', enableTickets: false };
 
     async function renderSetupWizard() {
       const el = document.getElementById('setup-wizard-content');
@@ -1216,6 +1216,10 @@
                 </select>
               </div>
             </div>` : ''}
+          <div class="toggle-row" style="margin-top:12px">
+            <label><input type="checkbox" ${wizardData.enableTickets ? 'checked' : ''} onchange="wizardData.enableTickets=this.checked;renderSetupWizard()"> Deploy ticket panel</label>
+          </div>
+          ${wizardData.enableTickets ? '<div class="info-box" style="margin-top:8px">The ticket panel will be deployed after setup completes. Make sure ticket types are already configured in the Tickets page.</div>' : ''}
         </div>
         <div class="wizard-nav"><button class="btn btn-ghost" onclick="wizardPrev()">← Back</button><button class="btn btn-primary" onclick="wizardNext()">Review →</button></div>`;
     }
@@ -1241,7 +1245,8 @@
           <h3>📋 Summary</h3>
           <div class="info-box">Template: <strong>${tpl.name}</strong> · ${enabledCats.length} categories · ${enabledChannels} channels · ${enabledRoles.length} roles
             ${wizardData.deleteExisting ? ' · <span style="color:var(--yellow)">Delete existing</span>' : ''}
-            ${wizardData.enableVerification ? ` · Verification (${wizardData.verifyType})` : ''}</div>
+            ${wizardData.enableVerification ? ` · Verification (${wizardData.verifyType})` : ''}
+            ${wizardData.enableTickets ? ' · Deploy ticket panel' : ''}</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
             <div class="review-section"><h4>📁 Categories & Channels</h4><ul class="review-list">${catsList}</ul></div>
             <div class="review-section"><h4>🎭 Roles</h4><ul class="review-list">${rolesList}</ul></div>
@@ -1333,10 +1338,26 @@
           currentGuildData = await gRes.json();
         } catch {}
 
+        // Deploy ticket panel if enabled
+        if (wizardData.enableTickets) {
+          addLog('Deploying ticket panel...');
+          try {
+            const ticketRes = await fetch(`${API}/api/tickets/deploy/${currentGuild}`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+            const ticketData = await ticketRes.json();
+            if (ticketRes.ok) {
+              addLog(`Ticket panel ${ticketData.action}!`, 'success');
+            } else {
+              addLog('Ticket panel: ' + (ticketData.error || 'No ticket types configured — configure them in the Tickets page first'), 'error');
+            }
+          } catch (err) {
+            addLog('Ticket panel deploy error: ' + err.message, 'error');
+          }
+        }
+
         // Show restart button
         const nav = document.getElementById('wizard-exec-nav');
         nav.style.display = 'flex';
-        nav.innerHTML = '<button class="btn btn-ghost" onclick="wizardStep=1;wizardData={templateKey:null,categories:[],roles:[],deleteExisting:false,enableVerification:false,verifyType:\'puzzle\'};renderSetupWizard()">🔄 New Setup</button><button class="btn btn-primary" onclick="showPage(\'server-info\')">View Server →</button>';
+        nav.innerHTML = '<button class="btn btn-ghost" onclick="wizardStep=1;wizardData={templateKey:null,categories:[],roles:[],deleteExisting:false,enableVerification:false,verifyType:\'puzzle\',enableTickets:false};renderSetupWizard()">🔄 New Setup</button><button class="btn btn-primary" onclick="showPage(\'server-info\')">View Server →</button>';
       } catch (err) {
         addLog('Connection error: ' + err.message, 'error');
         btn.disabled = false;

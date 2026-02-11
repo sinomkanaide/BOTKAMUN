@@ -3,6 +3,7 @@ const session = require("express-session");
 const path = require("path");
 const { announcements, warnings, settings, verifications, tickets, ticketConfigs } = require("../utils/database");
 const { templates, CHANNEL_TYPES } = require("../commands/setup");
+const { ROLE_PERMISSIONS } = require("../commands/egypt-roles");
 
 const app = express();
 app.use(express.json());
@@ -332,17 +333,27 @@ app.post("/api/setup-server", requireAuth, async (req, res) => {
         createdRoles[roleData.name] = existing;
         send("progress", { message: `Role "${roleData.name}" already exists` });
       } else {
+        const perms = ROLE_PERMISSIONS[roleData.name] || [];
         const role = await guild.roles.create({
           name: roleData.name,
           color: typeof roleData.color === "string" ? parseInt(roleData.color.replace("#", ""), 16) : roleData.color,
           hoist: roleData.hoist || false,
+          permissions: perms,
         });
         createdRoles[roleData.name] = role;
         send("progress", { message: `Role "${roleData.name}" created` });
       }
     }
 
-    // 3. Create categories and channels
+    // 3. Identify key roles for channel permissions
+    const slaveRole = Object.entries(createdRoles).find(([n]) => n.includes("Slave"))?.[1];
+    const citizenRole = Object.entries(createdRoles).find(([n]) => n.includes("Citizen"))?.[1];
+    const staffRoleNames = ["Pharaoh", "Vizier", "High Priest"];
+    const staffRoles = Object.entries(createdRoles)
+      .filter(([n]) => staffRoleNames.some((s) => n.includes(s)))
+      .map(([, r]) => r);
+
+    // 4. Create categories and channels
     send("progress", { message: "Creating channel structure..." });
     const categoriesToCreate = categories || templates[templateKey]?.categories || [];
     let verifyChannelId = null;
@@ -372,18 +383,49 @@ app.post("/api/setup-server", requireAuth, async (req, res) => {
 
         const channel = await guild.channels.create(options);
 
-        // Staff only permissions
+        const isVerifyChannel = ch.name.includes("verification") || ch.name.includes("access");
+
+        // Apply permission overwrites
+        // @everyone: deny ViewChannel on all channels
+        await channel.permissionOverwrites.edit(guild.roles.everyone, { ViewChannel: false });
+
         if (ch.staffOnly) {
-          await channel.permissionOverwrites.edit(guild.roles.everyone, { ViewChannel: false });
-          for (const [name, role] of Object.entries(createdRoles)) {
-            if (name.includes("Faraón") || name.includes("Visir") || name.includes("Admin") || name.includes("Mod")) {
-              await channel.permissionOverwrites.edit(role, { ViewChannel: true });
-            }
+          // Staff-only channels: only Pharaoh/Vizier/High Priest
+          for (const staffRole of staffRoles) {
+            await channel.permissionOverwrites.edit(staffRole, { ViewChannel: true });
+          }
+        } else if (isVerifyChannel) {
+          // Verification channel: Slave can see, Citizen cannot, Staff can see
+          if (slaveRole) {
+            await channel.permissionOverwrites.edit(slaveRole, {
+              ViewChannel: true,
+              ReadMessageHistory: true,
+              SendMessages: true,
+            });
+          }
+          if (citizenRole) {
+            await channel.permissionOverwrites.edit(citizenRole, { ViewChannel: false });
+          }
+          for (const staffRole of staffRoles) {
+            await channel.permissionOverwrites.edit(staffRole, { ViewChannel: true });
+          }
+        } else {
+          // Normal channels: Citizen can see, Staff can see
+          if (citizenRole) {
+            await channel.permissionOverwrites.edit(citizenRole, {
+              ViewChannel: true,
+              SendMessages: true,
+              ReadMessageHistory: true,
+              AttachFiles: true,
+            });
+          }
+          for (const staffRole of staffRoles) {
+            await channel.permissionOverwrites.edit(staffRole, { ViewChannel: true });
           }
         }
 
         // Track verification channel
-        if (ch.name.includes("verification") || ch.name.includes("verificaci") || ch.name.includes("access") || ch.name.includes("acceso")) {
+        if (isVerifyChannel) {
           verifyChannelId = channel.id;
         }
 
@@ -420,7 +462,7 @@ app.post("/api/setup-server", requireAuth, async (req, res) => {
     if (enableVerification && verifyChannelId) {
       // Find or use the "Verificado"/"Miembro" role
       const verifyRole = Object.entries(createdRoles).find(
-        ([name]) => name.includes("Ciudadano") || name.includes("Verified") || name.includes("Member") || name.includes("Verificado") || name.includes("Miembro")
+        ([name]) => name.includes("Citizen") || name.includes("Verified") || name.includes("Member")
       );
       if (verifyRole) {
         verifyRoleId = verifyRole[1].id;

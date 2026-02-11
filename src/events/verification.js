@@ -7,6 +7,7 @@ const {
 } = require("discord.js");
 const { settings, verifications } = require("../utils/database");
 const { challenges } = require("../commands/verification");
+const { getRanks } = require("../commands/egypt-roles");
 
 async function handleButton(interaction, client) {
   if (interaction.customId !== "verify_start") return;
@@ -14,24 +15,24 @@ async function handleButton(interaction, client) {
   const config = settings.get(`verify-${interaction.guild.id}`);
   if (!config) {
     return interaction.reply({
-      content: "❌ La verificación no está configurada en este servidor.",
+      content: "❌ Verification is not configured on this server.",
       ephemeral: true,
     });
   }
 
-  // Comprobar si ya está verificado
+  // Check if already verified
   const member = interaction.member;
   if (member.roles.cache.has(config.roleId)) {
     return interaction.reply({
-      content: "✅ Ya estás verificado.",
+      content: "✅ You are already verified.",
       ephemeral: true,
     });
   }
 
-  // Generar desafío
+  // Generate challenge
   const challenge = challenges[config.type]();
 
-  // Guardar desafío pendiente
+  // Save pending challenge
   verifications.set(interaction.user.id, {
     guildId: interaction.guild.id,
     answer: challenge.answer,
@@ -40,15 +41,15 @@ async function handleButton(interaction, client) {
     timestamp: Date.now(),
   });
 
-  // Crear modal para la respuesta
+  // Create modal for the answer
   const modal = new ModalBuilder()
     .setCustomId("verify_answer")
-    .setTitle("🔐 Verificación");
+    .setTitle("🔐 Verification");
 
   const questionInput = new TextInputBuilder()
     .setCustomId("answer")
     .setLabel(challenge.question.slice(0, 45))
-    .setPlaceholder(challenge.hint || "Escribe tu respuesta aquí")
+    .setPlaceholder(challenge.hint || "Type your answer here")
     .setStyle(
       config.type === "question" ? TextInputStyle.Paragraph : TextInputStyle.Short
     )
@@ -67,7 +68,7 @@ async function handleModal(interaction, client) {
   const pending = verifications.get(interaction.user.id);
   if (!pending) {
     return interaction.reply({
-      content: "❌ No tienes una verificación pendiente. Haz clic en el botón de nuevo.",
+      content: "❌ You have no pending verification. Click the button again.",
       ephemeral: true,
     });
   }
@@ -77,41 +78,52 @@ async function handleModal(interaction, client) {
   let success = false;
 
   if (pending.type === "question") {
-    // Para preguntas abiertas, solo verificar longitud mínima
+    // For open-ended questions, just check minimum length
     success = answer.split(/\s+/).length >= 10;
   } else {
     success = answer === pending.answer.toString().toLowerCase();
   }
 
   if (success) {
-    // Dar el rol
+    // Assign the Citizen role
     try {
       const member = await interaction.guild.members.fetch(interaction.user.id);
       await member.roles.add(pending.roleId);
+
+      // Remove the Slave role (level 0)
+      const ranks = getRanks(interaction.guild.id);
+      const slaveRank = ranks.find((r) => r.level === 0);
+      if (slaveRank) {
+        const slaveRole = interaction.guild.roles.cache.find((r) => r.name === slaveRank.name);
+        if (slaveRole && member.roles.cache.has(slaveRole.id)) {
+          await member.roles.remove(slaveRole);
+        }
+      }
+
       verifications.delete(interaction.user.id);
 
       const embed = new EmbedBuilder()
         .setColor(0x57f287)
-        .setTitle("✅ ¡Verificación Exitosa!")
+        .setTitle("✅ Verification Successful!")
         .setDescription(
-          `¡Bienvenido/a ${interaction.user}! Ya tienes acceso completo al servidor.`
+          `Welcome ${interaction.user}! You now have full access to the server.`
         )
         .setTimestamp();
 
       return interaction.reply({ embeds: [embed], ephemeral: true });
     } catch (err) {
-      console.error("Error asignando rol de verificación:", err);
+      console.error("Error assigning verification role:", err);
       return interaction.reply({
-        content: "❌ Error al asignar el rol. Contacta a un administrador.",
+        content: "❌ Error assigning the role. Contact an administrator.",
         ephemeral: true,
       });
     }
   } else {
     const embed = new EmbedBuilder()
       .setColor(0xed4245)
-      .setTitle("❌ Respuesta Incorrecta")
+      .setTitle("❌ Incorrect Answer")
       .setDescription(
-        "Tu respuesta no es correcta. Haz clic en el botón para intentarlo de nuevo."
+        "Your answer is not correct. Click the button to try again."
       )
       .setTimestamp();
 
@@ -120,15 +132,24 @@ async function handleModal(interaction, client) {
 }
 
 async function onMemberJoin(member, client) {
-  // Verificar si hay configuración de verificación para este servidor
+  // Check if verification is configured for this server
   const config = settings.get(`verify-${member.guild.id}`);
   if (!config) return;
 
-  // Opcionalmente dar un rol de "no verificado" o limitar acceso
-  // Por ahora solo logueamos
-  console.log(
-    `👤 Nuevo miembro ${member.user.tag} debe verificarse en ${member.guild.name}`
-  );
+  // Auto-assign the Slave role (level 0) to new members
+  const ranks = getRanks(member.guild.id);
+  const slaveRank = ranks.find((r) => r.level === 0);
+  if (slaveRank) {
+    const slaveRole = member.guild.roles.cache.find((r) => r.name === slaveRank.name);
+    if (slaveRole) {
+      try {
+        await member.roles.add(slaveRole);
+        console.log(`⛓️ Assigned Slave role to ${member.user.tag} in ${member.guild.name}`);
+      } catch (err) {
+        console.error(`Error assigning Slave role to ${member.user.tag}:`, err);
+      }
+    }
+  }
 }
 
 module.exports = { handleButton, handleModal, onMemberJoin };

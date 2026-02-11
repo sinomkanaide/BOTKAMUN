@@ -267,7 +267,7 @@ app.get("/api/settings/:guildId", requireAuth, (req, res) => {
 });
 
 // Serve the dashboard HTML
-app.get("*", (req, res) => {
+app.get("{*splat}", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 

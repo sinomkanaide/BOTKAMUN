@@ -278,6 +278,9 @@
       <div class="nav-item" data-page="verification" onclick="showPage('verification')">
         <span class="icon">🔐</span><span>Verificación</span>
       </div>
+      <div class="nav-item" data-page="tickets" onclick="showPage('tickets')">
+        <span class="icon">🎫</span><span>Tickets</span>
+      </div>
       <div class="nav-item" data-page="setup-wizard" onclick="showPage('setup-wizard')">
         <span class="icon">🛠️</span><span>Customize</span>
       </div>
@@ -341,6 +344,11 @@
         <div id="verification-content"></div>
       </div>
 
+      <!-- TICKETS PAGE -->
+      <div class="page" id="page-tickets">
+        <div id="tickets-content"></div>
+      </div>
+
       <!-- SETUP WIZARD PAGE -->
       <div class="page" id="page-setup-wizard">
         <div id="setup-wizard-content"></div>
@@ -395,6 +403,7 @@
       if (page === 'messages') renderMessages();
       if (page === 'warnings-page') renderWarnings();
       if (page === 'verification') renderVerification();
+      if (page === 'tickets') renderTickets();
       if (page === 'setup-wizard') renderSetupWizard();
     }
 
@@ -453,7 +462,7 @@
       const activePage = document.querySelector('.page.active');
       if (activePage) {
         const pageId = activePage.id.replace('page-', '');
-        if (['server-info', 'announcements', 'messages', 'warnings-page', 'verification', 'setup-wizard'].includes(pageId)) {
+        if (['server-info', 'announcements', 'messages', 'warnings-page', 'verification', 'tickets', 'setup-wizard'].includes(pageId)) {
           showPage(pageId);
         }
       }
@@ -722,6 +731,203 @@
       } catch {
         el.innerHTML = noServerHtml('ver la verificación');
       }
+    }
+
+    // ─── Tickets Page ───
+    let ticketConfig = null;
+    let ticketsList = {};
+
+    function categoryOptions(selectedId) {
+      if (!currentGuildData) return '<option value="">No server</option>';
+      const cats = currentGuildData.channels.filter(c => c.type === 4);
+      let html = '<option value="">Select category...</option>';
+      cats.forEach(c => {
+        html += `<option value="${c.id}" ${c.id === selectedId ? 'selected' : ''}>${c.name}</option>`;
+      });
+      return html;
+    }
+
+    function roleOptions(selectedId) {
+      if (!currentGuildData) return '<option value="">No server</option>';
+      let html = '<option value="">Select role...</option>';
+      currentGuildData.roles.filter(r => r.name !== '@everyone').forEach(r => {
+        html += `<option value="${r.id}" ${r.id === selectedId ? 'selected' : ''}>${r.name}</option>`;
+      });
+      return html;
+    }
+
+    async function renderTickets() {
+      const el = document.getElementById('tickets-content');
+      if (!currentGuild) { el.innerHTML = noServerHtml('manage tickets'); return; }
+
+      el.innerHTML = '<div class="page-header"><h2>🎫 Tickets</h2><p>Loading...</p></div>';
+
+      try {
+        const [configRes, listRes] = await Promise.all([
+          fetch(`${API}/api/tickets/config/${currentGuild}`),
+          fetch(`${API}/api/tickets/list/${currentGuild}`)
+        ]);
+        ticketConfig = await configRes.json();
+        ticketsList = await listRes.json();
+      } catch {
+        el.innerHTML = '<div class="card"><p style="color:var(--red)">Error loading ticket data</p></div>';
+        return;
+      }
+
+      const allTickets = Object.values(ticketsList);
+      const openCount = allTickets.filter(t => t.status === 'open').length;
+      const claimedCount = allTickets.filter(t => t.claimedBy && t.status !== 'closed').length;
+      const closedCount = allTickets.filter(t => t.status === 'closed').length;
+
+      // Types editor rows
+      let typesHtml = '';
+      if (ticketConfig.types && ticketConfig.types.length) {
+        typesHtml = ticketConfig.types.map((t, i) => `
+          <tr>
+            <td><code>${t.id}</code></td>
+            <td>${t.emoji} ${t.name}</td>
+            <td>${t.description}</td>
+            <td>${currentGuildData?.channels.find(c => c.id === t.categoryId)?.name || t.categoryId || '-'}</td>
+            <td>${currentGuildData?.roles.find(r => r.id === t.handlerRoleId)?.name || t.handlerRoleId || '-'}</td>
+            <td><span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:${t.color || '#5865f2'};vertical-align:middle"></span> ${t.color || '#5865f2'}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteTicketType('${t.id}')">Delete</button></td>
+          </tr>`).join('');
+      } else {
+        typesHtml = '<tr><td colspan="7" style="text-align:center;color:var(--text-secondary)">No ticket types configured. Add one below.</td></tr>';
+      }
+
+      // Open tickets table
+      const openTickets = allTickets.filter(t => t.status !== 'closed');
+      let openTicketsHtml = '';
+      if (openTickets.length) {
+        openTicketsHtml = openTickets.map(t => `
+          <tr>
+            <td><code>#${t.ticketNumber}</code></td>
+            <td>${t.typeName || t.typeId}</td>
+            <td>${t.userTag}</td>
+            <td><span class="badge ${t.claimedBy ? 'badge-yellow' : 'badge-green'}">${t.claimedBy ? 'Claimed' : 'Open'}</span></td>
+            <td>${t.claimedByTag || '-'}</td>
+            <td>${new Date(t.createdAt).toLocaleString()}</td>
+          </tr>`).join('');
+      } else {
+        openTicketsHtml = '<tr><td colspan="6" style="text-align:center;color:var(--text-secondary)">No open tickets</td></tr>';
+      }
+
+      el.innerHTML = `
+        <div class="page-header"><h2>🎫 Tickets — ${currentGuildData?.name || ''}</h2><p>Configure and manage the ticket system</p></div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-icon">🎫</div><div class="stat-value">${allTickets.length}</div><div class="stat-label">Total Tickets</div></div>
+          <div class="stat-card"><div class="stat-icon">📬</div><div class="stat-value">${openCount}</div><div class="stat-label">Open</div></div>
+          <div class="stat-card"><div class="stat-icon">👋</div><div class="stat-value">${claimedCount}</div><div class="stat-label">Claimed</div></div>
+          <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value">${closedCount}</div><div class="stat-label">Closed</div></div>
+        </div>
+
+        <div class="card">
+          <h3>⚙️ Panel Channel</h3>
+          <div class="form-group">
+            <label>Channel where the ticket panel will be posted</label>
+            <select id="ticket-panel-channel">${channelOptions('text')}</select>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" onclick="saveTicketConfig()">Save Config</button>
+            <button class="btn btn-ghost" onclick="deployTicketPanel()" ${!ticketConfig.types.length ? 'disabled style="opacity:0.5"' : ''}>Deploy Panel</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>📋 Ticket Types</h3>
+          <table>
+            <thead><tr><th>ID</th><th>Name</th><th>Description</th><th>Category</th><th>Handler Role</th><th>Color</th><th>Actions</th></tr></thead>
+            <tbody>${typesHtml}</tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3>➕ Add Ticket Type</h3>
+          <div class="form-grid">
+            <div class="form-group"><label>Type ID</label><input type="text" id="tt-id" placeholder="e.g. support, collabs"></div>
+            <div class="form-group"><label>Name</label><input type="text" id="tt-name" placeholder="e.g. Support"></div>
+            <div class="form-group"><label>Emoji</label><input type="text" id="tt-emoji" placeholder="e.g. 🎫"></div>
+            <div class="form-group"><label>Color</label><input type="color" id="tt-color" value="#5865f2"></div>
+            <div class="form-group"><label>Category</label><select id="tt-category">${categoryOptions()}</select></div>
+            <div class="form-group"><label>Handler Role</label><select id="tt-role">${roleOptions()}</select></div>
+          </div>
+          <div class="form-group"><label>Description</label><input type="text" id="tt-desc" placeholder="Short description shown on the panel"></div>
+          <div class="form-actions"><button class="btn btn-primary" onclick="addTicketType()">Add Type</button></div>
+        </div>
+
+        <div class="card">
+          <h3>📬 Open Tickets</h3>
+          <table>
+            <thead><tr><th>#</th><th>Type</th><th>User</th><th>Status</th><th>Claimed by</th><th>Created</th></tr></thead>
+            <tbody>${openTicketsHtml}</tbody>
+          </table>
+        </div>`;
+
+      // Set panel channel value
+      if (ticketConfig.panelChannelId) {
+        document.getElementById('ticket-panel-channel').value = ticketConfig.panelChannelId;
+      }
+    }
+
+    async function saveTicketConfig() {
+      const panelChannelId = document.getElementById('ticket-panel-channel').value;
+      if (!panelChannelId) return toast('Select a panel channel', true);
+      try {
+        const res = await fetch(`${API}/api/tickets/config/${currentGuild}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ panelChannelId })
+        });
+        if (res.ok) { toast('Ticket config saved'); renderTickets(); }
+        else toast('Error saving config', true);
+      } catch { toast('Error saving config', true); }
+    }
+
+    async function deployTicketPanel() {
+      try {
+        const res = await fetch(`${API}/api/tickets/deploy/${currentGuild}`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+        const data = await res.json();
+        if (res.ok) toast(`Panel ${data.action}!`);
+        else toast(data.error || 'Error deploying', true);
+      } catch { toast('Error deploying panel', true); }
+    }
+
+    async function addTicketType() {
+      const id = document.getElementById('tt-id').value.trim().toLowerCase().replace(/\s+/g, '-');
+      const name = document.getElementById('tt-name').value.trim();
+      const emoji = document.getElementById('tt-emoji').value.trim();
+      const description = document.getElementById('tt-desc').value.trim();
+      const categoryId = document.getElementById('tt-category').value;
+      const handlerRoleId = document.getElementById('tt-role').value;
+      const color = document.getElementById('tt-color').value;
+
+      if (!id || !name || !emoji || !description || !categoryId || !handlerRoleId) return toast('Fill in all fields', true);
+
+      const types = [...(ticketConfig.types || [])];
+      const idx = types.findIndex(t => t.id === id);
+      const typeData = { id, name, emoji, description, categoryId, handlerRoleId, color };
+      if (idx >= 0) types[idx] = typeData;
+      else types.push(typeData);
+
+      try {
+        const res = await fetch(`${API}/api/tickets/config/${currentGuild}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ types })
+        });
+        if (res.ok) { toast(`Type "${name}" ${idx >= 0 ? 'updated' : 'added'}`); renderTickets(); }
+        else toast('Error saving type', true);
+      } catch { toast('Error saving type', true); }
+    }
+
+    async function deleteTicketType(typeId) {
+      if (!confirm('Delete this ticket type?')) return;
+      try {
+        const res = await fetch(`${API}/api/tickets/type/${currentGuild}/${typeId}`, { method: 'DELETE' });
+        if (res.ok) { toast('Type deleted'); renderTickets(); }
+        else toast('Error deleting type', true);
+      } catch { toast('Error deleting type', true); }
     }
 
     // ─── Setup Wizard ───

@@ -1,7 +1,7 @@
 const express = require("express");
 const session = require("express-session");
 const path = require("path");
-const { announcements, warnings, settings, verifications } = require("../utils/database");
+const { announcements, warnings, settings, verifications, tickets, ticketConfigs } = require("../utils/database");
 const { templates, CHANNEL_TYPES } = require("../commands/setup");
 
 const app = express();
@@ -473,6 +473,111 @@ app.post("/api/setup-server", requireAuth, async (req, res) => {
   }
 
   res.end();
+});
+
+// ─── Tickets ───
+app.get("/api/tickets/config/:guildId", requireAuth, (req, res) => {
+  const config = ticketConfigs.get(`guild-${req.params.guildId}`);
+  res.json(config || { guildId: req.params.guildId, panelChannelId: null, panelMessageId: null, ticketCounter: 0, types: [] });
+});
+
+app.post("/api/tickets/config/:guildId", requireAuth, (req, res) => {
+  const configKey = `guild-${req.params.guildId}`;
+  const existing = ticketConfigs.get(configKey) || {
+    guildId: req.params.guildId,
+    panelChannelId: null,
+    panelMessageId: null,
+    ticketCounter: 0,
+    types: [],
+  };
+
+  if (req.body.panelChannelId !== undefined) existing.panelChannelId = req.body.panelChannelId;
+  if (req.body.types !== undefined) existing.types = req.body.types;
+
+  ticketConfigs.set(configKey, existing);
+  res.json(existing);
+});
+
+app.post("/api/tickets/deploy/:guildId", requireAuth, async (req, res) => {
+  if (!botClient) return res.status(500).json({ error: "Bot not connected" });
+
+  const configKey = `guild-${req.params.guildId}`;
+  const config = ticketConfigs.get(configKey);
+  if (!config || !config.types.length) return res.status(400).json({ error: "No ticket types configured" });
+  if (!config.panelChannelId) return res.status(400).json({ error: "No panel channel configured" });
+
+  try {
+    const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+
+    const guild = botClient.guilds.cache.get(req.params.guildId);
+    if (!guild) return res.status(404).json({ error: "Guild not found" });
+
+    const channel = await guild.channels.fetch(config.panelChannelId);
+    if (!channel) return res.status(404).json({ error: "Panel channel not found" });
+
+    const typesDescription = config.types
+      .map((t) => `${t.emoji} **${t.name}** — ${t.description}`)
+      .join("\n");
+
+    const embed = new EmbedBuilder()
+      .setColor(0x5865f2)
+      .setTitle("Support Tickets")
+      .setDescription(`Need help? Open a ticket by clicking the appropriate button below.\n\n${typesDescription}`)
+      .setFooter({ text: "Click a button to open a ticket" })
+      .setTimestamp();
+
+    const rows = [];
+    let currentRow = new ActionRowBuilder();
+    for (let i = 0; i < config.types.length; i++) {
+      const t = config.types[i];
+      currentRow.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`ticket_open_${t.id}`)
+          .setLabel(`${t.emoji} ${t.name}`)
+          .setStyle(ButtonStyle.Secondary)
+      );
+      if ((i + 1) % 5 === 0 || i === config.types.length - 1) {
+        rows.push(currentRow);
+        currentRow = new ActionRowBuilder();
+      }
+    }
+
+    if (config.panelMessageId) {
+      try {
+        const msg = await channel.messages.fetch(config.panelMessageId);
+        await msg.edit({ embeds: [embed], components: rows });
+        return res.json({ success: true, action: "updated" });
+      } catch {}
+    }
+
+    const msg = await channel.send({ embeds: [embed], components: rows });
+    config.panelMessageId = msg.id;
+    ticketConfigs.set(configKey, config);
+
+    res.json({ success: true, action: "created" });
+  } catch (err) {
+    console.error("Error deploying ticket panel from dashboard:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/tickets/list/:guildId", requireAuth, (req, res) => {
+  const all = tickets.getAll();
+  const guildTickets = {};
+  for (const [key, ticket] of Object.entries(all)) {
+    if (ticket.guildId === req.params.guildId) guildTickets[key] = ticket;
+  }
+  res.json(guildTickets);
+});
+
+app.delete("/api/tickets/type/:guildId/:typeId", requireAuth, (req, res) => {
+  const configKey = `guild-${req.params.guildId}`;
+  const config = ticketConfigs.get(configKey);
+  if (!config) return res.status(404).json({ error: "Config not found" });
+
+  config.types = config.types.filter((t) => t.id !== req.params.typeId);
+  ticketConfigs.set(configKey, config);
+  res.json({ success: true });
 });
 
 // ─── Settings ───

@@ -47,5 +47,7 @@ const warnings = createStore("warnings.json");
 const announcements = createStore("announcements.json");
 const settings = createStore("settings.json");
 const verifications = createStore("verifications.json");
+const tickets = createStore("tickets.json");
+const ticketConfigs = createStore("ticketConfigs.json");
 
-module.exports = { warnings, announcements, settings, verifications };
+module.exports = { warnings, announcements, settings, verifications, tickets, ticketConfigs };

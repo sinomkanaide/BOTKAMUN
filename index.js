@@ -37,8 +37,10 @@ const announcementCommands = require("./src/commands/announcements");
 const verificationCommands = require("./src/commands/verification");
 const setupCommands = require("./src/commands/setup");
 const generalCommands = require("./src/commands/general");
+const ticketCommands = require("./src/commands/tickets");
 const welcomeEvents = require("./src/events/welcome");
 const verificationEvents = require("./src/events/verification");
+const ticketEvents = require("./src/events/tickets");
 
 // ─── Registrar handlers ───
 const allHandlers = {
@@ -48,6 +50,7 @@ const allHandlers = {
   ...verificationCommands.handlers,
   ...setupCommands.handlers,
   ...generalCommands.handlers,
+  ...ticketCommands.handlers,
 };
 
 // ─── Registrar slash commands al conectar ───
@@ -63,6 +66,7 @@ client.once("ready", async () => {
     ...verificationCommands.definitions,
     ...setupCommands.definitions,
     ...generalCommands.definitions,
+    ...ticketCommands.definitions,
   ].map((c) => c.toJSON());
 
   const rest = new REST({ version: "10" }).setToken(TOKEN);
@@ -103,14 +107,22 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 
-  // Buttons (para verificación)
+  // Buttons
   if (interaction.isButton()) {
-    verificationEvents.handleButton(interaction, client);
+    if (interaction.customId.startsWith("ticket_")) {
+      ticketEvents.handleButton(interaction, client);
+    } else {
+      verificationEvents.handleButton(interaction, client);
+    }
   }
 
-  // Modals (para verificación)
+  // Modals
   if (interaction.isModalSubmit()) {
-    verificationEvents.handleModal(interaction, client);
+    if (interaction.customId.startsWith("ticket_")) {
+      ticketEvents.handleModal(interaction, client);
+    } else {
+      verificationEvents.handleModal(interaction, client);
+    }
   }
 });
 

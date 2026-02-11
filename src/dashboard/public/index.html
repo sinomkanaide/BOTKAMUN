@@ -278,6 +278,12 @@
       <div class="nav-item" data-page="verification" onclick="showPage('verification')">
         <span class="icon">🔐</span><span>Verificación</span>
       </div>
+      <div class="nav-item" data-page="ranks" onclick="showPage('ranks')">
+        <span class="icon">🏛️</span><span>Rangos Egipcios</span>
+      </div>
+      <div class="nav-item" data-page="wallets" onclick="showPage('wallets')">
+        <span class="icon">🔗</span><span>Wallets</span>
+      </div>
       <div class="nav-item" data-page="tickets" onclick="showPage('tickets')">
         <span class="icon">🎫</span><span>Tickets</span>
       </div>
@@ -344,6 +350,16 @@
         <div id="verification-content"></div>
       </div>
 
+      <!-- RANKS PAGE -->
+      <div class="page" id="page-ranks">
+        <div id="ranks-content"></div>
+      </div>
+
+      <!-- WALLETS PAGE -->
+      <div class="page" id="page-wallets">
+        <div id="wallets-content"></div>
+      </div>
+
       <!-- TICKETS PAGE -->
       <div class="page" id="page-tickets">
         <div id="tickets-content"></div>
@@ -404,6 +420,8 @@
       if (page === 'warnings-page') renderWarnings();
       if (page === 'verification') renderVerification();
       if (page === 'tickets') renderTickets();
+      if (page === 'ranks') renderRanks();
+      if (page === 'wallets') renderWallets();
       if (page === 'setup-wizard') renderSetupWizard();
     }
 
@@ -462,7 +480,7 @@
       const activePage = document.querySelector('.page.active');
       if (activePage) {
         const pageId = activePage.id.replace('page-', '');
-        if (['server-info', 'announcements', 'messages', 'warnings-page', 'verification', 'tickets', 'setup-wizard'].includes(pageId)) {
+        if (['server-info', 'announcements', 'messages', 'warnings-page', 'verification', 'tickets', 'ranks', 'wallets', 'setup-wizard'].includes(pageId)) {
           showPage(pageId);
         }
       }
@@ -730,6 +748,156 @@
         }
       } catch {
         el.innerHTML = noServerHtml('ver la verificación');
+      }
+    }
+
+    // ─── Ranks Page ───
+    async function renderRanks() {
+      const el = document.getElementById('ranks-content');
+      if (!currentGuild) { el.innerHTML = noServerHtml('manage ranks'); return; }
+
+      el.innerHTML = '<div class="page-header"><h2>🏛️ Rangos Egipcios</h2><p>Loading...</p></div>';
+
+      try {
+        const res = await fetch(`${API}/api/ranks/${currentGuild}`);
+        const ranks = await res.json();
+
+        let ranksHtml = '';
+        if (ranks.length) {
+          ranksHtml = ranks.map(r => {
+            const color = typeof r.color === 'number' ? '#' + r.color.toString(16).padStart(6, '0') : (r.color || '#6d6d6d');
+            const levelText = r.level === 0 ? 'Entry' : r.level === -1 ? 'Verified' : `Level ${r.level}+`;
+            return `<tr>
+              <td><span style="color:${color};font-weight:600">${r.name}</span></td>
+              <td><code>${r.roleKey}</code></td>
+              <td>${levelText}</td>
+              <td><span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:${color};vertical-align:middle"></span> ${color}</td>
+              <td>${r.description || '-'}</td>
+              <td>${r.level > 0 ? `<div class="form-actions" style="margin:0"><input type="number" id="level-${r.roleKey}" value="${r.level}" style="width:70px;padding:4px 8px;background:var(--bg-primary);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:13px"><button class="btn btn-ghost btn-sm" onclick="editRankLevel('${r.roleKey}')">Save</button></div>` : '-'}</td>
+              <td>${r.level > 0 ? `<button class="btn btn-danger btn-sm" onclick="deleteRank('${r.roleKey}')">Delete</button>` : ''}</td>
+            </tr>`;
+          }).join('');
+        } else {
+          ranksHtml = '<tr><td colspan="7" style="text-align:center;color:var(--text-secondary)">No ranks configured</td></tr>';
+        }
+
+        el.innerHTML = `
+          <div class="page-header"><h2>🏛️ Rangos Egipcios — ${currentGuildData?.name || ''}</h2><p>Manage the Egyptian rank hierarchy</p></div>
+          <div class="card">
+            <h3>📜 Current Hierarchy</h3>
+            <table>
+              <thead><tr><th>Name</th><th>Key</th><th>Level</th><th>Color</th><th>Description</th><th>Edit Level</th><th>Actions</th></tr></thead>
+              <tbody>${ranksHtml}</tbody>
+            </table>
+          </div>
+          <div class="card">
+            <h3>➕ Add New Rank</h3>
+            <div class="form-grid">
+              <div class="form-group"><label>Name (with emoji)</label><input type="text" id="rank-name" placeholder="e.g. ⚔️ Warrior"></div>
+              <div class="form-group"><label>Required Level</label><input type="number" id="rank-level" placeholder="e.g. 15" min="1"></div>
+              <div class="form-group"><label>Color</label><input type="color" id="rank-color" value="#5865f2"></div>
+              <div class="form-group"><label>Description</label><input type="text" id="rank-desc" placeholder="Short description"></div>
+            </div>
+            <div class="form-actions"><button class="btn btn-primary" onclick="addRank()">Add Rank</button></div>
+          </div>
+          <div class="info-box">
+            <strong>Discord Commands:</strong><br>
+            <code>/setuproles</code> — Create all roles in Discord<br>
+            <code>/setgameapi</code> — Configure the game API for level lookup<br>
+            <code>/setupclaim</code> — Create the claim channel with buttons<br>
+            <code>/ranks</code> — Show the hierarchy in chat
+          </div>`;
+      } catch {
+        el.innerHTML = '<div class="card"><p style="color:var(--red)">Error loading ranks</p></div>';
+      }
+    }
+
+    async function addRank() {
+      const name = document.getElementById('rank-name').value.trim();
+      const level = document.getElementById('rank-level').value;
+      const color = document.getElementById('rank-color').value;
+      const description = document.getElementById('rank-desc').value.trim();
+      if (!name || !level) return toast('Fill in name and level', true);
+
+      try {
+        const res = await fetch(`${API}/api/ranks/${currentGuild}/add`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, level: parseInt(level), color, description })
+        });
+        if (res.ok) { toast('Rank added'); renderRanks(); }
+        else toast('Error adding rank', true);
+      } catch { toast('Error adding rank', true); }
+    }
+
+    async function editRankLevel(roleKey) {
+      const input = document.getElementById(`level-${roleKey}`);
+      if (!input) return;
+      const newLevel = parseInt(input.value);
+      if (isNaN(newLevel) || newLevel < 1) return toast('Invalid level', true);
+
+      try {
+        const ranksRes = await fetch(`${API}/api/ranks/${currentGuild}`);
+        const ranks = await ranksRes.json();
+        const rank = ranks.find(r => r.roleKey === roleKey);
+        if (rank) rank.level = newLevel;
+        const res = await fetch(`${API}/api/ranks/${currentGuild}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ranks })
+        });
+        if (res.ok) { toast('Level updated'); renderRanks(); }
+        else toast('Error updating level', true);
+      } catch { toast('Error updating level', true); }
+    }
+
+    async function deleteRank(roleKey) {
+      if (!confirm('Delete this rank?')) return;
+      try {
+        const res = await fetch(`${API}/api/ranks/${currentGuild}/${roleKey}`, { method: 'DELETE' });
+        if (res.ok) { toast('Rank deleted'); renderRanks(); }
+        else toast('Error deleting rank', true);
+      } catch { toast('Error deleting rank', true); }
+    }
+
+    // ─── Wallets Page ───
+    async function renderWallets() {
+      const el = document.getElementById('wallets-content');
+      if (!currentGuild) { el.innerHTML = noServerHtml('view wallets'); return; }
+
+      el.innerHTML = '<div class="page-header"><h2>🔗 Wallets</h2><p>Loading...</p></div>';
+
+      try {
+        const res = await fetch(`${API}/api/wallets/${currentGuild}`);
+        const wallets = await res.json();
+
+        let walletsHtml = '';
+        if (wallets.length) {
+          walletsHtml = wallets.map(w => `<tr>
+            <td><code>${w.userId}</code></td>
+            <td><code style="color:var(--accent-light)">${w.wallet.slice(0, 6)}...${w.wallet.slice(-4)}</code></td>
+            <td>${w.lastRank || '-'}</td>
+            <td>${w.lastLevel !== undefined ? w.lastLevel : '-'}</td>
+            <td>${w.lastClaim ? new Date(w.lastClaim).toLocaleString() : '-'}</td>
+          </tr>`).join('');
+        } else {
+          walletsHtml = '<tr><td colspan="5" style="text-align:center;color:var(--text-secondary)">No wallets linked yet</td></tr>';
+        }
+
+        el.innerHTML = `
+          <div class="page-header"><h2>🔗 Linked Wallets — ${currentGuildData?.name || ''}</h2><p>Wallets verified through the claim system</p></div>
+          <div class="stats-grid">
+            <div class="stat-card"><div class="stat-icon">🔗</div><div class="stat-value">${wallets.length}</div><div class="stat-label">Linked Wallets</div></div>
+          </div>
+          <div class="card">
+            <h3>📋 Wallet Registry</h3>
+            <table>
+              <thead><tr><th>User ID</th><th>Wallet</th><th>Current Rank</th><th>Level</th><th>Last Claim</th></tr></thead>
+              <tbody>${walletsHtml}</tbody>
+            </table>
+          </div>`;
+      } catch {
+        el.innerHTML = '<div class="card"><p style="color:var(--red)">Error loading wallets</p></div>';
       }
     }
 

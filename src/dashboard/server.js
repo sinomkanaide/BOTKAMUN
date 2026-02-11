@@ -35,10 +35,7 @@ function getRedirectUri(req) {
 }
 
 // Auth middleware
-function requireAuth(req, res, next) {
-  if (req.session.authenticated) return next();
-  return res.status(401).json({ error: "No autenticado" });
-}
+const { requireAuth } = require("./auth-middleware");
 
 // ─── Discord OAuth2 Routes ───
 app.get("/api/auth/discord", (req, res) => {
@@ -594,6 +591,10 @@ app.get("{*splat}", (req, res) => {
 
 function start(client) {
   botClient = client;
+
+  const { registerClaimRoutes } = require("./claim-routes");
+  registerClaimRoutes(app, () => botClient);
+
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
     console.log(`🌐 Dashboard: http://localhost:${PORT}`);

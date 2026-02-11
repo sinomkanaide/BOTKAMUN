@@ -179,6 +179,10 @@ const handlers = {
           value: "`/setup` — Crea estructura completa del servidor",
         },
         {
+          name: "🏛️ Rangos Egipcios",
+          value: "`/setuproles` `/setgameapi` `/setupclaim` `/ranks`",
+        },
+        {
           name: "🎮 General",
           value: "`/ping` `/serverinfo` `/userinfo` `/avatar` `/say` `/help`",
         }

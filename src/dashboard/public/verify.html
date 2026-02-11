@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔱 Verificación — Templo de los Rangos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --gold: #d4a843;
+      --gold-light: #f0d68a;
+      --gold-dark: #8b6914;
+      --bg-dark: #0a0908;
+      --bg-card: #151310;
+      --bg-hover: #1e1a15;
+      --sand: #c8a96e;
+      --papyrus: #f5e6c8;
+      --text: #e8dcc8;
+      --text-dim: #8b7d6b;
+      --red: #c0392b;
+      --green: #27ae60;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Crimson Text', serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Animated background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(ellipse at 30% 20%, rgba(212,168,67,0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 80%, rgba(139,105,20,0.06) 0%, transparent 50%),
+        linear-gradient(180deg, #0a0908 0%, #0f0d0a 50%, #0a0908 100%);
+      z-index: 0;
+    }
+
+    /* Floating hieroglyphs */
+    .hieroglyphs {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .hieroglyph {
+      position: absolute;
+      font-size: 24px;
+      opacity: 0.04;
+      animation: float 20s infinite linear;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+      10% { opacity: 0.04; }
+      90% { opacity: 0.04; }
+      100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 460px;
+      max-width: 95vw;
+    }
+
+    /* Main card */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid rgba(212,168,67,0.15);
+      border-radius: 2px;
+      padding: 48px 40px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+
+    .card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4a843' fill-opacity='0.015'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+
+    .card-content { position: relative; z-index: 1; }
+
+    /* Logo / Icon */
+    .logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .logo-icon {
+      font-size: 56px;
+      display: block;
+      margin-bottom: 16px;
+      filter: drop-shadow(0 0 20px rgba(212,168,67,0.3));
+    }
+
+    .logo h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+    }
+
+    .logo p {
+      font-size: 15px;
+      color: var(--text-dim);
+      margin-top: 8px;
+      font-style: italic;
+    }
+
+    /* Steps */
+    .steps {
+      margin: 32px 0;
+    }
+
+    .step {
+      display: flex;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid rgba(212,168,67,0.08);
+      align-items: center;
+      transition: opacity 0.3s;
+    }
+
+    .step:last-child { border-bottom: none; }
+    .step.dimmed { opacity: 0.3; }
+    .step.active { opacity: 1; }
+    .step.completed { opacity: 0.7; }
+
+    .step-number {
+      width: 36px;
+      height: 36px;
+      border: 2px solid var(--gold-dark);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Cinzel', serif;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--gold-dark);
+      flex-shrink: 0;
+      transition: all 0.3s;
+    }
+
+    .step.active .step-number {
+      border-color: var(--gold);
+      color: var(--gold);
+      box-shadow: 0 0 15px rgba(212,168,67,0.2);
+    }
+
+    .step.completed .step-number {
+      border-color: var(--green);
+      color: var(--green);
+      background: rgba(39,174,96,0.1);
+    }
+
+    .step-text h3 {
+      font-family: 'Cinzel', serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .step-text p {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    /* Button */
+    .btn-connect {
+      width: 100%;
+      padding: 16px;
+      border: 1px solid var(--gold);
+      background: linear-gradient(135deg, rgba(212,168,67,0.1), rgba(139,105,20,0.1));
+      color: var(--gold);
+      font-family: 'Cinzel', serif;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: all 0.3s;
+      margin-top: 24px;
+    }
+
+    .btn-connect:hover:not(:disabled) {
+      background: linear-gradient(135deg, rgba(212,168,67,0.2), rgba(139,105,20,0.2));
+      box-shadow: 0 0 30px rgba(212,168,67,0.15);
+      transform: translateY(-1px);
+    }
+
+    .btn-connect:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-connect.loading {
+      position: relative;
+      color: transparent;
+    }
+
+    .btn-connect.loading::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 20px; height: 20px;
+      margin: -10px 0 0 -10px;
+      border: 2px solid var(--gold-dark);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Result */
+    .result {
+      display: none;
+      text-align: center;
+      padding: 24px 0;
+    }
+
+    .result-icon { font-size: 48px; margin-bottom: 16px; }
+
+    .result-title {
+      font-family: 'Cinzel', serif;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .result-desc {
+      font-size: 15px;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+
+    .result.success .result-title { color: var(--gold); }
+    .result.error .result-title { color: var(--red); }
+
+    .rank-badge {
+      display: inline-block;
+      padding: 8px 24px;
+      border: 1px solid var(--gold);
+      border-radius: 2px;
+      font-family: 'Cinzel', serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--gold);
+      margin: 16px 0;
+      background: rgba(212,168,67,0.08);
+      letter-spacing: 2px;
+    }
+
+    .wallet-display {
+      font-family: monospace;
+      font-size: 13px;
+      color: var(--text-dim);
+      padding: 8px 16px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 2px;
+      margin-top: 12px;
+      display: inline-block;
+    }
+
+    /* Error states */
+    .error-box {
+      display: none;
+      background: rgba(192,57,43,0.1);
+      border: 1px solid rgba(192,57,43,0.3);
+      border-radius: 2px;
+      padding: 12px 16px;
+      margin-top: 16px;
+      font-size: 14px;
+      color: #e74c3c;
+    }
+
+    /* Expired */
+    .expired {
+      text-align: center;
+      padding: 40px;
+    }
+
+    .expired-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+
+    .expired h2 {
+      font-family: 'Cinzel', serif;
+      color: var(--text-dim);
+      font-size: 18px;
+    }
+
+    .expired p {
+      color: var(--text-dim);
+      margin-top: 8px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Floating hieroglyphs background -->
+  <div class="hieroglyphs" id="hieroglyphs"></div>
+
+  <div class="container">
+    <div class="card">
+      <div class="card-content">
+
+        <!-- Main verify flow -->
+        <div id="verify-flow">
+          <div class="logo">
+            <span class="logo-icon">🏛️</span>
+            <h1>Templo de los Rangos</h1>
+            <p>Demuestra tu valía ante los dioses</p>
+          </div>
+
+          <div class="steps">
+            <div class="step active" id="step-1">
+              <div class="step-number">I</div>
+              <div class="step-text">
+                <h3>Conectar Wallet</h3>
+                <p>Vincula tu wallet con MetaMask</p>
+              </div>
+            </div>
+            <div class="step dimmed" id="step-2">
+              <div class="step-number">II</div>
+              <div class="step-text">
+                <h3>Firmar Mensaje</h3>
+                <p>Verifica que eres el dueño</p>
+              </div>
+            </div>
+            <div class="step dimmed" id="step-3">
+              <div class="step-number">III</div>
+              <div class="step-text">
+                <h3>Recibir tu Rango</h3>
+                <p>El oráculo determina tu posición</p>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-connect" id="btn-main" onclick="startVerification()">
+            🦊 Conectar MetaMask
+          </button>
+
+          <div class="error-box" id="error-box"></div>
+        </div>
+
+        <!-- Success result -->
+        <div class="result success" id="result-success">
+          <div class="result-icon">🔱</div>
+          <div class="result-title">¡Los Dioses te han Reconocido!</div>
+          <div class="rank-badge" id="result-rank"></div>
+          <div class="result-desc" id="result-message"></div>
+          <div class="wallet-display" id="result-wallet"></div>
+        </div>
+
+        <!-- Error result -->
+        <div class="result error" id="result-error">
+          <div class="result-icon">⚠️</div>
+          <div class="result-title" id="error-title">Error en la Verificación</div>
+          <div class="result-desc" id="error-message"></div>
+        </div>
+
+        <!-- Expired -->
+        <div class="expired" id="expired-view" style="display:none">
+          <div class="expired-icon">⏳</div>
+          <h2>Enlace Expirado</h2>
+          <p>Regresa a Discord y genera un nuevo enlace haciendo clic en "Claim tu Rango"</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Extract token from URL
+    const pathParts = window.location.pathname.split('/');
+    const TOKEN = pathParts[pathParts.length - 1];
+
+    let walletAddress = null;
+
+    // Generate floating hieroglyphs
+    const hieroglyphs = ['𓀀','𓁀','𓂀','𓃀','𓄀','𓅀','𓆀','𓇀','𓈀','𓉀','𓊀','𓋀','𓌀','𓍀','𓎀','𓏀','𓐀','☥','𓂋','𓅃','𓆣','𓇳','𓊝','𓋹'];
+    const container = document.getElementById('hieroglyphs');
+    for (let i = 0; i < 20; i++) {
+      const el = document.createElement('span');
+      el.className = 'hieroglyph';
+      el.textContent = hieroglyphs[Math.floor(Math.random() * hieroglyphs.length)];
+      el.style.left = Math.random() * 100 + '%';
+      el.style.animationDelay = Math.random() * 20 + 's';
+      el.style.animationDuration = (15 + Math.random() * 15) + 's';
+      el.style.fontSize = (16 + Math.random() * 24) + 'px';
+      container.appendChild(el);
+    }
+
+    // Check if token is valid on load
+    async function checkToken() {
+      try {
+        const res = await fetch(`/api/claim/check/${TOKEN}`);
+        const data = await res.json();
+        if (!data.valid) {
+          document.getElementById('verify-flow').style.display = 'none';
+          document.getElementById('expired-view').style.display = 'block';
+        }
+      } catch {
+        document.getElementById('verify-flow').style.display = 'none';
+        document.getElementById('expired-view').style.display = 'block';
+      }
+    }
+    checkToken();
+
+    function setStep(num) {
+      for (let i = 1; i <= 3; i++) {
+        const el = document.getElementById(`step-${i}`);
+        el.classList.remove('active', 'completed', 'dimmed');
+        if (i < num) el.classList.add('completed');
+        else if (i === num) el.classList.add('active');
+        else el.classList.add('dimmed');
+      }
+    }
+
+    function showError(msg) {
+      const box = document.getElementById('error-box');
+      box.textContent = msg;
+      box.style.display = 'block';
+      setTimeout(() => box.style.display = 'none', 5000);
+    }
+
+    async function startVerification() {
+      const btn = document.getElementById('btn-main');
+
+      // Check MetaMask
+      if (!window.ethereum) {
+        showError('MetaMask no detectado. Instala MetaMask para continuar.');
+        return;
+      }
+
+      try {
+        // Step 1: Connect wallet
+        btn.classList.add('loading');
+        btn.disabled = true;
+
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        walletAddress = accounts[0];
+
+        setStep(2);
+        btn.classList.remove('loading');
+        btn.textContent = '✍️ Firmar Mensaje';
+        btn.disabled = false;
+        btn.onclick = signMessage;
+
+      } catch (err) {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+        showError('Conexión rechazada. Intenta de nuevo.');
+      }
+    }
+
+    async function signMessage() {
+      const btn = document.getElementById('btn-main');
+      btn.classList.add('loading');
+      btn.disabled = true;
+
+      try {
+        // Create message to sign
+        const message = `Verificar wallet para Discord\n\nWallet: ${walletAddress}\nToken: ${TOKEN}\nTimestamp: ${Date.now()}`;
+
+        // Request signature
+        const signature = await window.ethereum.request({
+          method: 'personal_sign',
+          params: [message, walletAddress],
+        });
+
+        setStep(3);
+        btn.textContent = '🔱 Consultando al Oráculo...';
+
+        // Send to backend
+        const res = await fetch('/api/claim/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token: TOKEN,
+            wallet: walletAddress,
+            signature,
+            message,
+          }),
+        });
+
+        const result = await res.json();
+
+        if (result.success) {
+          // Show success
+          document.getElementById('verify-flow').style.display = 'none';
+          document.getElementById('result-success').style.display = 'block';
+          document.getElementById('result-rank').textContent = result.rankName || 'Rango Asignado';
+          document.getElementById('result-message').textContent =
+            result.message || `Nivel ${result.level} verificado. Tu rango ha sido actualizado en Discord.`;
+          document.getElementById('result-wallet').textContent =
+            walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4);
+        } else {
+          // Show error
+          document.getElementById('verify-flow').style.display = 'none';
+          document.getElementById('result-error').style.display = 'block';
+          document.getElementById('error-title').textContent = result.error || 'Error';
+          document.getElementById('error-message').textContent =
+            result.details || 'No se pudo verificar tu wallet. Intenta de nuevo desde Discord.';
+        }
+
+      } catch (err) {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+        btn.textContent = '✍️ Firmar Mensaje';
+        btn.onclick = signMessage;
+        showError('Firma rechazada o error de red. Intenta de nuevo.');
+      }
+    }
+  </script>
+</body>
+</html>

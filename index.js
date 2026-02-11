@@ -38,9 +38,11 @@ const verificationCommands = require("./src/commands/verification");
 const setupCommands = require("./src/commands/setup");
 const generalCommands = require("./src/commands/general");
 const ticketCommands = require("./src/commands/tickets");
+const egyptCommands = require("./src/commands/egypt-roles");
 const welcomeEvents = require("./src/events/welcome");
 const verificationEvents = require("./src/events/verification");
 const ticketEvents = require("./src/events/tickets");
+const claimEvents = require("./src/events/claim");
 
 // ─── Registrar handlers ───
 const allHandlers = {
@@ -51,6 +53,7 @@ const allHandlers = {
   ...setupCommands.handlers,
   ...generalCommands.handlers,
   ...ticketCommands.handlers,
+  ...egyptCommands.handlers,
 };
 
 // ─── Registrar slash commands al conectar ───
@@ -67,6 +70,7 @@ client.once("ready", async () => {
     ...setupCommands.definitions,
     ...generalCommands.definitions,
     ...ticketCommands.definitions,
+    ...egyptCommands.definitions,
   ].map((c) => c.toJSON());
 
   const rest = new REST({ version: "10" }).setToken(TOKEN);
@@ -111,6 +115,8 @@ client.on("interactionCreate", async (interaction) => {
   if (interaction.isButton()) {
     if (interaction.customId.startsWith("ticket_")) {
       ticketEvents.handleButton(interaction, client);
+    } else if (interaction.customId === "claim_rank" || interaction.customId === "view_my_rank") {
+      claimEvents.handleButton(interaction, client);
     } else {
       verificationEvents.handleButton(interaction, client);
     }

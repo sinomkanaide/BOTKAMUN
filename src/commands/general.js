@@ -180,7 +180,7 @@ const handlers = {
         },
         {
           name: "🏛️ Rangos Egipcios",
-          value: "`/setuproles` `/setgameapi` `/setupclaim` `/ranks`",
+          value: "`/setuproles` `/clearroles` `/setgameapi` `/setupclaim` `/ranks`",
         },
         {
           name: "🎮 General",

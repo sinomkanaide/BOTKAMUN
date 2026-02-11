@@ -88,6 +88,11 @@ const definitions = [
     .setName("setuproles")
     .setDescription("Crea todos los roles egipcios en el servidor automáticamente")
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+
+  new SlashCommandBuilder()
+    .setName("clearroles")
+    .setDescription("Elimina todos los roles creados por el bot (jerarquía egipcia)")
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 ];
 
 const handlers = {
@@ -258,6 +263,47 @@ const handlers = {
       .setColor(0xd4a843)
       .setTitle("🎭 Roles Egipcios Creados")
       .setDescription(created.join("\n"))
+      .setTimestamp();
+
+    return interaction.editReply({ embeds: [embed] });
+  },
+
+  async clearroles(interaction) {
+    await interaction.deferReply({ ephemeral: true });
+
+    const ranks = getRanks(interaction.guild.id);
+    const adminNames = ["☀️ Faraón", "🐍 Visir"];
+    const allBotRoleNames = [
+      ...ranks.map((r) => r.name),
+      ...adminNames,
+    ];
+
+    const results = [];
+    let deleted = 0;
+
+    for (const roleName of allBotRoleNames) {
+      // Find ALL roles with this name (catches duplicates)
+      const matching = interaction.guild.roles.cache.filter((r) => r.name === roleName);
+      for (const [, role] of matching) {
+        try {
+          await role.delete("clearroles command");
+          deleted++;
+          results.push(`🗑️ ${role.name}`);
+        } catch (err) {
+          results.push(`❌ ${role.name}: ${err.message}`);
+        }
+      }
+    }
+
+    if (!deleted && !results.length) {
+      results.push("No se encontraron roles del bot para eliminar.");
+    }
+
+    const embed = new EmbedBuilder()
+      .setColor(0xed4245)
+      .setTitle("🗑️ Roles Eliminados")
+      .setDescription(results.join("\n"))
+      .setFooter({ text: `${deleted} roles eliminados. Usa /setuproles para recrearlos.` })
       .setTimestamp();
 
     return interaction.editReply({ embeds: [embed] });

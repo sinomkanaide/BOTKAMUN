@@ -3,7 +3,7 @@ const {
   PermissionFlagsBits,
   EmbedBuilder,
 } = require("discord.js");
-const { v4: uuidv4 } = require("uuid");
+const crypto = require("crypto");
 const { announcements } = require("../utils/database");
 
 const definitions = [
@@ -88,7 +88,7 @@ const handlers = {
     const pingRole = interaction.options.getRole("ping");
     const colorStr = interaction.options.getString("color");
 
-    const id = uuidv4().slice(0, 8);
+    const id = crypto.randomUUID().slice(0, 8);
     const ann = {
       guildId: interaction.guild.id,
       channelId: channel.id,

@@ -5,167 +5,167 @@ const {
   EmbedBuilder,
 } = require("discord.js");
 
-// Plantillas de servidor predefinidas
+// Server templates
 const templates = {
   gaming: {
-    name: "🎮 Comunidad Gaming",
+    name: "🎮 Gaming Community",
     categories: [
       {
-        name: "📋 INFORMACIÓN",
+        name: "📋 INFORMATION",
         channels: [
-          { name: "📜reglas", type: "text", topic: "Lee las reglas del servidor antes de participar" },
-          { name: "📢anuncios", type: "announcement", topic: "Anuncios importantes del servidor" },
-          { name: "🔐verificación", type: "text", topic: "Verifícate para acceder al servidor" },
-          { name: "👋presentaciones", type: "text", topic: "Preséntate a la comunidad" },
+          { name: "📜rules", type: "text", topic: "Read the server rules before participating" },
+          { name: "📢announcements", type: "announcement", topic: "Important server announcements" },
+          { name: "🔐verification", type: "text", topic: "Verify to access the server" },
+          { name: "👋introductions", type: "text", topic: "Introduce yourself to the community" },
         ],
       },
       {
         name: "💬 GENERAL",
         channels: [
-          { name: "💬chat-general", type: "text", topic: "Conversación general — respeta a los demás" },
-          { name: "🤖bot-commands", type: "text", topic: "Usa los comandos del bot aquí" },
-          { name: "🎵música", type: "text", topic: "Comparte música y recomendaciones" },
-          { name: "📸multimedia", type: "text", topic: "Comparte imágenes, videos y memes" },
+          { name: "💬general-chat", type: "text", topic: "General conversation — be respectful" },
+          { name: "🤖bot-commands", type: "text", topic: "Use bot commands here" },
+          { name: "🎵music", type: "text", topic: "Share music and recommendations" },
+          { name: "📸media", type: "text", topic: "Share images, videos and memes" },
         ],
       },
       {
         name: "🎮 GAMING",
         channels: [
-          { name: "🎮buscar-equipo", type: "text", topic: "Encuentra compañeros para jugar" },
-          { name: "🏆torneos", type: "text", topic: "Información sobre torneos y competencias" },
-          { name: "💡clips-y-highlights", type: "text", topic: "Comparte tus mejores jugadas" },
-          { name: "📊estadísticas", type: "text", topic: "Compara y comparte tus stats" },
+          { name: "🎮looking-for-group", type: "text", topic: "Find teammates to play with" },
+          { name: "🏆tournaments", type: "text", topic: "Tournament info and competitions" },
+          { name: "💡clips-and-highlights", type: "text", topic: "Share your best plays" },
+          { name: "📊stats", type: "text", topic: "Compare and share your stats" },
         ],
       },
       {
-        name: "🔊 VOZ",
+        name: "🔊 VOICE",
         channels: [
           { name: "🎙️General 1", type: "voice" },
           { name: "🎙️General 2", type: "voice" },
           { name: "🎮Gaming 1", type: "voice" },
           { name: "🎮Gaming 2", type: "voice" },
-          { name: "🎵Música", type: "voice" },
+          { name: "🎵Music", type: "voice" },
           { name: "🔇AFK", type: "voice" },
         ],
       },
       {
         name: "🛡️ STAFF",
         channels: [
-          { name: "👮staff-chat", type: "text", topic: "Chat privado del equipo de moderación", staffOnly: true },
-          { name: "📝logs", type: "text", topic: "Registro de acciones de moderación", staffOnly: true },
-          { name: "📊estadísticas-mod", type: "text", topic: "Estadísticas de moderación", staffOnly: true },
+          { name: "👮staff-chat", type: "text", topic: "Private staff chat", staffOnly: true },
+          { name: "📝logs", type: "text", topic: "Moderation action logs", staffOnly: true },
+          { name: "📊mod-stats", type: "text", topic: "Moderation statistics", staffOnly: true },
         ],
       },
     ],
     roles: [
       { name: "👑 Owner", color: 0xf1c40f, hoist: true },
       { name: "🛡️ Admin", color: 0xe74c3c, hoist: true },
-      { name: "🔧 Moderador", color: 0xe67e22, hoist: true },
-      { name: "✅ Verificado", color: 0x2ecc71 },
+      { name: "🔧 Moderator", color: 0xe67e22, hoist: true },
+      { name: "✅ Verified", color: 0x2ecc71 },
       { name: "🎮 Gamer", color: 0x9b59b6 },
-      { name: "🆕 Nuevo", color: 0x95a5a6 },
+      { name: "🆕 Newcomer", color: 0x95a5a6 },
     ],
   },
 
   community: {
-    name: "🌍 Comunidad General",
+    name: "🌍 General Community",
     categories: [
       {
-        name: "📋 BIENVENIDA",
+        name: "📋 WELCOME",
         channels: [
-          { name: "📜reglas", type: "text", topic: "Reglas de convivencia de la comunidad" },
-          { name: "📢anuncios", type: "announcement", topic: "Noticias y anuncios oficiales" },
-          { name: "🔐verificación", type: "text", topic: "Verifícate aquí" },
-          { name: "🎭roles", type: "text", topic: "Elige tus roles" },
+          { name: "📜rules", type: "text", topic: "Community rules and guidelines" },
+          { name: "📢announcements", type: "announcement", topic: "Official news and announcements" },
+          { name: "🔐verification", type: "text", topic: "Verify yourself here" },
+          { name: "🎭roles", type: "text", topic: "Pick your roles" },
         ],
       },
       {
-        name: "💬 CONVERSACIÓN",
+        name: "💬 CHAT",
         channels: [
-          { name: "💬general", type: "text", topic: "Chat libre sobre cualquier tema" },
-          { name: "🤝ayuda", type: "text", topic: "Pide y ofrece ayuda" },
-          { name: "💡ideas", type: "text", topic: "Comparte tus ideas y sugerencias" },
-          { name: "📸fotos-y-videos", type: "text", topic: "Comparte contenido multimedia" },
+          { name: "💬general", type: "text", topic: "Free chat about anything" },
+          { name: "🤝help", type: "text", topic: "Ask and offer help" },
+          { name: "💡ideas", type: "text", topic: "Share your ideas and suggestions" },
+          { name: "📸photos-and-videos", type: "text", topic: "Share multimedia content" },
         ],
       },
       {
-        name: "🎨 CREATIVIDAD",
+        name: "🎨 CREATIVITY",
         channels: [
-          { name: "🎨arte", type: "text", topic: "Comparte tu arte y creaciones" },
-          { name: "✍️escritura", type: "text", topic: "Textos, poesía y relatos" },
-          { name: "🎵música", type: "text", topic: "Descubrimientos musicales" },
-          { name: "📚recomendaciones", type: "text", topic: "Libros, películas, series y más" },
+          { name: "🎨art", type: "text", topic: "Share your art and creations" },
+          { name: "✍️writing", type: "text", topic: "Stories, poetry and creative writing" },
+          { name: "🎵music", type: "text", topic: "Music discoveries and recommendations" },
+          { name: "📚recommendations", type: "text", topic: "Books, movies, shows and more" },
         ],
       },
       {
-        name: "🔊 VOZ",
+        name: "🔊 VOICE",
         channels: [
           { name: "☕ Chill", type: "voice" },
           { name: "💬 Chat 1", type: "voice" },
           { name: "💬 Chat 2", type: "voice" },
-          { name: "🎵 Música", type: "voice" },
+          { name: "🎵 Music", type: "voice" },
         ],
       },
       {
-        name: "🛡️ ADMINISTRACIÓN",
+        name: "🛡️ ADMIN",
         channels: [
-          { name: "👮staff", type: "text", topic: "Canal privado de staff", staffOnly: true },
-          { name: "📝logs", type: "text", topic: "Registros", staffOnly: true },
+          { name: "👮staff", type: "text", topic: "Private staff channel", staffOnly: true },
+          { name: "📝logs", type: "text", topic: "Logs", staffOnly: true },
         ],
       },
     ],
     roles: [
-      { name: "👑 Fundador", color: 0xf1c40f, hoist: true },
+      { name: "👑 Founder", color: 0xf1c40f, hoist: true },
       { name: "🛡️ Admin", color: 0xe74c3c, hoist: true },
       { name: "🔧 Mod", color: 0xe67e22, hoist: true },
       { name: "⭐ VIP", color: 0x3498db, hoist: true },
-      { name: "✅ Miembro", color: 0x2ecc71 },
-      { name: "🆕 Sin verificar", color: 0x95a5a6 },
+      { name: "✅ Member", color: 0x2ecc71 },
+      { name: "🆕 Unverified", color: 0x95a5a6 },
     ],
   },
 
   business: {
-    name: "💼 Empresa / Equipo",
+    name: "💼 Business / Team",
     categories: [
       {
         name: "📋 GENERAL",
         channels: [
-          { name: "📢anuncios", type: "announcement", topic: "Comunicados oficiales" },
-          { name: "📜guías", type: "text", topic: "Guías y documentación" },
-          { name: "🔐acceso", type: "text", topic: "Verificación de acceso" },
+          { name: "📢announcements", type: "announcement", topic: "Official communications" },
+          { name: "📜guidelines", type: "text", topic: "Guides and documentation" },
+          { name: "🔐access", type: "text", topic: "Access verification" },
         ],
       },
       {
-        name: "💬 EQUIPO",
+        name: "💬 TEAM",
         channels: [
-          { name: "💬general", type: "text", topic: "Conversación del equipo" },
-          { name: "🎯objetivos", type: "text", topic: "Metas y seguimiento" },
-          { name: "💡brainstorming", type: "text", topic: "Ideas y propuestas" },
-          { name: "📊reportes", type: "text", topic: "Reportes semanales" },
+          { name: "💬general", type: "text", topic: "Team conversation" },
+          { name: "🎯goals", type: "text", topic: "Goals and tracking" },
+          { name: "💡brainstorming", type: "text", topic: "Ideas and proposals" },
+          { name: "📊reports", type: "text", topic: "Weekly reports" },
         ],
       },
       {
-        name: "🔧 PROYECTOS",
+        name: "🔧 PROJECTS",
         channels: [
-          { name: "📌proyecto-1", type: "text", topic: "Canal del proyecto principal" },
-          { name: "📌proyecto-2", type: "text", topic: "Canal del proyecto secundario" },
-          { name: "🐛bugs", type: "text", topic: "Reportar bugs y problemas" },
-          { name: "✅completados", type: "text", topic: "Proyectos finalizados" },
+          { name: "📌project-1", type: "text", topic: "Main project channel" },
+          { name: "📌project-2", type: "text", topic: "Secondary project channel" },
+          { name: "🐛bugs", type: "text", topic: "Report bugs and issues" },
+          { name: "✅completed", type: "text", topic: "Completed projects" },
         ],
       },
       {
-        name: "🔊 REUNIONES",
+        name: "🔊 MEETINGS",
         channels: [
           { name: "📞 Daily Standup", type: "voice" },
-          { name: "🤝 Reunión General", type: "voice" },
+          { name: "🤝 General Meeting", type: "voice" },
           { name: "💼 1-on-1", type: "voice" },
         ],
       },
       {
-        name: "🔒 DIRECCIÓN",
+        name: "🔒 LEADERSHIP",
         channels: [
-          { name: "🔒dirección", type: "text", topic: "Canal de dirección", staffOnly: true },
-          { name: "📝minutas", type: "text", topic: "Actas de reuniones", staffOnly: true },
+          { name: "🔒leadership", type: "text", topic: "Leadership channel", staffOnly: true },
+          { name: "📝meeting-notes", type: "text", topic: "Meeting minutes", staffOnly: true },
         ],
       },
     ],
@@ -174,7 +174,81 @@ const templates = {
       { name: "📋 Manager", color: 0xe74c3c, hoist: true },
       { name: "💻 Developer", color: 0x3498db, hoist: true },
       { name: "🎨 Designer", color: 0x9b59b6, hoist: true },
-      { name: "✅ Miembro", color: 0x2ecc71 },
+      { name: "✅ Member", color: 0x2ecc71 },
+    ],
+  },
+
+  web3: {
+    name: "🌐 Web3 / NFT Community",
+    categories: [
+      {
+        name: "📋 START HERE",
+        channels: [
+          { name: "📜rules", type: "text", topic: "Read the rules before interacting" },
+          { name: "📢announcements", type: "announcement", topic: "Official project announcements and updates" },
+          { name: "🔐verification", type: "text", topic: "Verify your wallet to access the server" },
+          { name: "👋introductions", type: "text", topic: "Introduce yourself — what chain are you on?" },
+          { name: "📚faq", type: "text", topic: "Frequently asked questions" },
+        ],
+      },
+      {
+        name: "💬 COMMUNITY",
+        channels: [
+          { name: "💬general-chat", type: "text", topic: "General discussion — keep it respectful" },
+          { name: "🖼️show-your-nfts", type: "text", topic: "Flex your collection and latest mints" },
+          { name: "📈alpha-calls", type: "text", topic: "Share alpha and early opportunities" },
+          { name: "🤖bot-commands", type: "text", topic: "Use bot commands here" },
+          { name: "📸memes", type: "text", topic: "Web3 memes and shitposts" },
+        ],
+      },
+      {
+        name: "🔗 WEB3 HUB",
+        channels: [
+          { name: "🪙token-talk", type: "text", topic: "Discuss tokenomics, charts and price action" },
+          { name: "🖼️nft-drops", type: "text", topic: "Upcoming mints, drops and free mints" },
+          { name: "🔗dapp-showcase", type: "text", topic: "Share and discuss dApps and protocols" },
+          { name: "⛓️on-chain-analysis", type: "text", topic: "Whale watching, wallet tracking and analytics" },
+          { name: "🛡️security-alerts", type: "text", topic: "Scam alerts, rug reports and security tips" },
+          { name: "📊defi-strategies", type: "text", topic: "Yield farming, staking and DeFi plays" },
+        ],
+      },
+      {
+        name: "🛠️ BUILDERS",
+        channels: [
+          { name: "💻dev-chat", type: "text", topic: "Solidity, Rust, smart contracts and Web3 dev" },
+          { name: "🐛bug-bounties", type: "text", topic: "Bug bounty programs and findings" },
+          { name: "📝proposals", type: "text", topic: "DAO proposals and governance discussions" },
+          { name: "🤝collabs", type: "text", topic: "Find collaborators for your Web3 project" },
+        ],
+      },
+      {
+        name: "🔊 VOICE",
+        channels: [
+          { name: "🎙️ Lounge", type: "voice" },
+          { name: "📡 AMA Stage", type: "voice" },
+          { name: "💰 Trading Room", type: "voice" },
+          { name: "🛠️ Builder Space", type: "voice" },
+          { name: "🔇 AFK", type: "voice" },
+        ],
+      },
+      {
+        name: "🔒 CORE TEAM",
+        channels: [
+          { name: "🔒core-team", type: "text", topic: "Private core team discussion", staffOnly: true },
+          { name: "📝mod-logs", type: "text", topic: "Moderation and admin logs", staffOnly: true },
+          { name: "📊treasury", type: "text", topic: "Treasury management and multisig ops", staffOnly: true },
+        ],
+      },
+    ],
+    roles: [
+      { name: "👑 Founder", color: 0xf1c40f, hoist: true },
+      { name: "🛡️ Admin", color: 0xe74c3c, hoist: true },
+      { name: "🔧 Moderator", color: 0xe67e22, hoist: true },
+      { name: "🛠️ Builder", color: 0x3498db, hoist: true },
+      { name: "💎 OG Holder", color: 0x9b59b6, hoist: true },
+      { name: "🐋 Whale", color: 0x1abc9c, hoist: true },
+      { name: "✅ Verified", color: 0x2ecc71 },
+      { name: "🆕 Newcomer", color: 0x95a5a6 },
     ],
   },
 };
@@ -187,8 +261,9 @@ const definitions = [
       o.setName("plantilla").setDescription("Plantilla de servidor").setRequired(true)
         .addChoices(
           { name: "🎮 Gaming", value: "gaming" },
-          { name: "🌍 Comunidad General", value: "community" },
-          { name: "💼 Empresa / Equipo", value: "business" }
+          { name: "🌍 Community", value: "community" },
+          { name: "💼 Business", value: "business" },
+          { name: "🌐 Web3 / NFT", value: "web3" }
         )
     )
     .addBooleanOption((o) =>
@@ -285,7 +360,7 @@ const handlers = {
 
       // 4. Enviar reglas en el canal de reglas
       const rulesChannel = interaction.guild.channels.cache.find(
-        (c) => c.name.includes("reglas") && c.type === ChannelType.GuildText
+        (c) => (c.name.includes("rules") || c.name.includes("reglas")) && c.type === ChannelType.GuildText
       );
       if (rulesChannel) {
         const rulesEmbed = new EmbedBuilder()

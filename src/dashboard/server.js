@@ -312,7 +312,7 @@ app.post("/api/setup-server", requireAuth, async (req, res) => {
 
     // 1. Delete existing channels if requested
     if (deleteExisting) {
-      send("progress", { message: "Eliminando canales existentes..." });
+      send("progress", { message: "Deleting existing channels..." });
       const channels = guild.channels.cache.filter((c) => c.type !== CT.GuildCategory || true);
       let deleted = 0;
       for (const [, ch] of channels) {
@@ -321,11 +321,11 @@ app.post("/api/setup-server", requireAuth, async (req, res) => {
           deleted++;
         } catch {}
       }
-      send("progress", { message: `${deleted} canales eliminados` });
+      send("progress", { message: `${deleted} channels deleted` });
     }
 
     // 2. Create roles
-    send("progress", { message: "Creando roles..." });
+    send("progress", { message: "Creating roles..." });
     const createdRoles = {};
     const rolesToCreate = roles || templates[templateKey]?.roles || [];
     for (const roleData of rolesToCreate) {
@@ -333,7 +333,7 @@ app.post("/api/setup-server", requireAuth, async (req, res) => {
       const existing = guild.roles.cache.find((r) => r.name === roleData.name);
       if (existing) {
         createdRoles[roleData.name] = existing;
-        send("progress", { message: `Rol "${roleData.name}" ya existe` });
+        send("progress", { message: `Role "${roleData.name}" already exists` });
       } else {
         const role = await guild.roles.create({
           name: roleData.name,
@@ -341,12 +341,12 @@ app.post("/api/setup-server", requireAuth, async (req, res) => {
           hoist: roleData.hoist || false,
         });
         createdRoles[roleData.name] = role;
-        send("progress", { message: `Rol "${roleData.name}" creado` });
+        send("progress", { message: `Role "${roleData.name}" created` });
       }
     }
 
     // 3. Create categories and channels
-    send("progress", { message: "Creando estructura de canales..." });
+    send("progress", { message: "Creating channel structure..." });
     const categoriesToCreate = categories || templates[templateKey]?.categories || [];
     let verifyChannelId = null;
     let verifyRoleId = null;
@@ -357,7 +357,7 @@ app.post("/api/setup-server", requireAuth, async (req, res) => {
         name: cat.name,
         type: CT.GuildCategory,
       });
-      send("progress", { message: `Categoria: ${cat.name}` });
+      send("progress", { message: `Category: ${cat.name}` });
 
       for (const ch of cat.channels) {
         if (!ch.enabled && ch.enabled !== undefined) continue;
@@ -381,7 +381,7 @@ app.post("/api/setup-server", requireAuth, async (req, res) => {
         }
 
         // Track verification channel
-        if (ch.name.includes("verificaci") || ch.name.includes("acceso")) {
+        if (ch.name.includes("verification") || ch.name.includes("verificaci") || ch.name.includes("access") || ch.name.includes("acceso")) {
           verifyChannelId = channel.id;
         }
 
@@ -391,34 +391,34 @@ app.post("/api/setup-server", requireAuth, async (req, res) => {
 
     // 4. Post rules embed
     const rulesChannel = guild.channels.cache.find(
-      (c) => c.name.includes("reglas") && c.type === CT.GuildText
+      (c) => (c.name.includes("rules") || c.name.includes("reglas")) && c.type === CT.GuildText
     );
     if (rulesChannel) {
       const rulesEmbed = new EmbedBuilder()
         .setColor(0x5865f2)
-        .setTitle("Reglas del Servidor")
+        .setTitle("Server Rules")
         .setDescription(
-          "**1.** Se respetuoso con todos los miembros\n" +
-          "**2.** No spam ni flood\n" +
-          "**3.** No contenido NSFW fuera de canales designados\n" +
-          "**4.** No publicidad sin permiso\n" +
-          "**5.** Sigue las instrucciones del staff\n" +
-          "**6.** Usa los canales apropiados para cada tema\n" +
-          "**7.** No compartas informacion personal de otros\n" +
-          "**8.** Diviertete y se parte de la comunidad\n\n" +
-          "_El incumplimiento puede resultar en advertencias, mute o ban._"
+          "**1.** Be respectful to all members\n" +
+          "**2.** No spam or flooding\n" +
+          "**3.** No NSFW content outside designated channels\n" +
+          "**4.** No advertising without permission\n" +
+          "**5.** Follow staff instructions\n" +
+          "**6.** Use the appropriate channels for each topic\n" +
+          "**7.** Do not share other people's personal information\n" +
+          "**8.** Have fun and be part of the community\n\n" +
+          "_Violations may result in warnings, mute or ban._"
         )
-        .setFooter({ text: "Ultima actualizacion" })
+        .setFooter({ text: "Last updated" })
         .setTimestamp();
       await rulesChannel.send({ embeds: [rulesEmbed] });
-      send("progress", { message: "Reglas publicadas" });
+      send("progress", { message: "Rules posted" });
     }
 
     // 5. Setup verification if enabled
     if (enableVerification && verifyChannelId) {
       // Find or use the "Verificado"/"Miembro" role
       const verifyRole = Object.entries(createdRoles).find(
-        ([name]) => name.includes("Verificado") || name.includes("Miembro")
+        ([name]) => name.includes("Verified") || name.includes("Member") || name.includes("Verificado") || name.includes("Miembro")
       );
       if (verifyRole) {
         verifyRoleId = verifyRole[1].id;
@@ -434,39 +434,39 @@ app.post("/api/setup-server", requireAuth, async (req, res) => {
         });
 
         const typeNames = {
-          puzzle: "Resolver un acertijo",
-          colors: "Secuencia de colores",
-          math: "Problema matematico",
-          question: "Pregunta personal",
+          puzzle: "Solve a riddle",
+          colors: "Color sequence",
+          math: "Math problem",
+          question: "Personal question",
         };
 
         const verifyChannel = await guild.channels.fetch(verifyChannelId);
         if (verifyChannel) {
           const embed = new EmbedBuilder()
             .setColor(0x5865f2)
-            .setTitle("Verificacion Requerida")
+            .setTitle("Verification Required")
             .setDescription(
-              `Bienvenido al servidor! Para acceder a todos los canales, necesitas verificarte.\n\n` +
-              `**Tipo de desafio:** ${typeNames[vType]}\n\n` +
-              `Haz clic en el boton de abajo para comenzar tu verificacion.`
+              `Welcome to the server! To access all channels, you need to verify.\n\n` +
+              `**Challenge type:** ${typeNames[vType]}\n\n` +
+              `Click the button below to start your verification.`
             )
-            .setFooter({ text: "Sistema de verificacion creativa" })
+            .setFooter({ text: "Creative verification system" })
             .setTimestamp();
 
           const row = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
               .setCustomId("verify_start")
-              .setLabel("Verificarme")
+              .setLabel("Verify Me")
               .setStyle(ButtonStyle.Primary)
           );
 
           await verifyChannel.send({ embeds: [embed], components: [row] });
-          send("progress", { message: `Verificacion configurada (${typeNames[vType]})` });
+          send("progress", { message: `Verification configured (${typeNames[vType]})` });
         }
       }
     }
 
-    send("complete", { message: `Servidor configurado con la plantilla "${templates[templateKey]?.name || templateKey}"` });
+    send("complete", { message: `Server configured with template "${templates[templateKey]?.name || templateKey}"` });
   } catch (err) {
     console.error("Error en setup-server:", err);
     send("error", { message: err.message });

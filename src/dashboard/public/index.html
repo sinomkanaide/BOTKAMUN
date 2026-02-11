@@ -173,7 +173,7 @@
     .wizard-step.active { background: var(--accent); color: white; border-color: var(--accent); }
     .wizard-step.done { background: rgba(0,210,160,0.15); color: var(--green); border-color: rgba(0,210,160,0.3); }
     .wizard-nav { display: flex; justify-content: space-between; margin-top: 24px; }
-    .template-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .template-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
     .template-card {
       background: var(--bg-card); border: 2px solid var(--border); border-radius: var(--radius);
       padding: 24px; cursor: pointer; transition: all 0.2s; text-align: center;
@@ -279,7 +279,7 @@
         <span class="icon">🔐</span><span>Verificación</span>
       </div>
       <div class="nav-item" data-page="setup-wizard" onclick="showPage('setup-wizard')">
-        <span class="icon">🛠️</span><span>Personalizar</span>
+        <span class="icon">🛠️</span><span>Customize</span>
       </div>
 
       <div class="sidebar-footer">
@@ -731,17 +731,17 @@
 
     async function renderSetupWizard() {
       const el = document.getElementById('setup-wizard-content');
-      if (!currentGuild) { el.innerHTML = noServerHtml('personalizar el servidor'); return; }
+      if (!currentGuild) { el.innerHTML = noServerHtml('customize the server'); return; }
 
       // Load templates on first render
       if (!wizardTemplates) {
         try {
           const res = await fetch(`${API}/api/setup-templates`);
           wizardTemplates = await res.json();
-        } catch { el.innerHTML = '<div class="card"><p style="color:var(--red)">Error cargando plantillas</p></div>'; return; }
+        } catch { el.innerHTML = '<div class="card"><p style="color:var(--red)">Error loading templates</p></div>'; return; }
       }
 
-      const stepLabels = ['Plantilla', 'Canales', 'Roles', 'Opciones', 'Ejecutar'];
+      const stepLabels = ['Template', 'Channels', 'Roles', 'Options', 'Execute'];
       const stepsHtml = stepLabels.map((label, i) => {
         const n = i + 1;
         const cls = n === wizardStep ? 'active' : n < wizardStep ? 'done' : '';
@@ -756,24 +756,24 @@
       else if (wizardStep === 5) content = renderWizardStep5();
 
       el.innerHTML = `
-        <div class="page-header"><h2>🛠️ Personalizar Servidor — ${currentGuildData?.name || ''}</h2><p>Configura la estructura de tu servidor paso a paso</p></div>
+        <div class="page-header"><h2>🛠️ Customize Server — ${currentGuildData?.name || ''}</h2><p>Set up your server structure step by step</p></div>
         <div class="wizard-steps">${stepsHtml}</div>
         ${content}`;
     }
 
     function renderWizardStep1() {
-      const icons = { gaming: '🎮', community: '🌍', business: '💼' };
+      const icons = { gaming: '🎮', community: '🌍', business: '💼', web3: '🌐' };
       let cards = '';
       for (const [key, tpl] of Object.entries(wizardTemplates)) {
         const selected = wizardData.templateKey === key ? 'selected' : '';
         cards += `<div class="template-card ${selected}" onclick="selectTemplate('${key}')">
           <div class="tpl-icon">${icons[key] || '📦'}</div>
           <div class="tpl-name">${tpl.name}</div>
-          <div class="tpl-stats">${tpl.totalCategories} categorias · ${tpl.totalChannels} canales · ${tpl.totalRoles} roles</div>
+          <div class="tpl-stats">${tpl.totalCategories} categories · ${tpl.totalChannels} channels · ${tpl.totalRoles} roles</div>
         </div>`;
       }
       return `<div class="template-cards">${cards}</div>
-        <div class="wizard-nav"><div></div><button class="btn btn-primary" onclick="wizardNext()" ${!wizardData.templateKey ? 'disabled style="opacity:0.5"' : ''}>Siguiente →</button></div>`;
+        <div class="wizard-nav"><div></div><button class="btn btn-primary" onclick="wizardNext()" ${!wizardData.templateKey ? 'disabled style="opacity:0.5"' : ''}>Next →</button></div>`;
     }
 
     function selectTemplate(key) {
@@ -785,7 +785,7 @@
     }
 
     function renderWizardStep2() {
-      if (!wizardData.categories.length) return '<p>Selecciona una plantilla primero</p>';
+      if (!wizardData.categories.length) return '<p>Select a template first</p>';
       let html = '';
       wizardData.categories.forEach((cat, ci) => {
         let channels = '';
@@ -793,57 +793,57 @@
           const icon = ch.type === 'voice' ? '🔊' : ch.type === 'announcement' ? '📢' : '#';
           channels += `<div class="toggle-row">
             <label><input type="checkbox" ${ch.enabled ? 'checked' : ''} onchange="wizardData.categories[${ci}].channels[${chi}].enabled=this.checked"> ${icon} ${ch.name}</label>
-            <input type="text" value="${ch.name}" onchange="wizardData.categories[${ci}].channels[${chi}].name=this.value" placeholder="Nombre">
+            <input type="text" value="${ch.name}" onchange="wizardData.categories[${ci}].channels[${chi}].name=this.value" placeholder="Name">
           </div>`;
         });
         html += `<div class="category-block">
           <div class="category-header"><input type="checkbox" ${cat.enabled ? 'checked' : ''} onchange="wizardData.categories[${ci}].enabled=this.checked;renderSetupWizard()"> ${cat.name}</div>
-          ${cat.enabled ? channels : '<div style="padding:8px 12px;color:var(--text-secondary);font-size:13px">Categoria desactivada</div>'}
+          ${cat.enabled ? channels : '<div style="padding:8px 12px;color:var(--text-secondary);font-size:13px">Category disabled</div>'}
         </div>`;
       });
       return `<div class="card">${html}</div>
-        <div class="wizard-nav"><button class="btn btn-ghost" onclick="wizardPrev()">← Anterior</button><button class="btn btn-primary" onclick="wizardNext()">Siguiente →</button></div>`;
+        <div class="wizard-nav"><button class="btn btn-ghost" onclick="wizardPrev()">← Back</button><button class="btn btn-primary" onclick="wizardNext()">Next →</button></div>`;
     }
 
     function renderWizardStep3() {
-      if (!wizardData.roles.length) return '<p>Selecciona una plantilla primero</p>';
+      if (!wizardData.roles.length) return '<p>Select a template first</p>';
       let html = '';
       wizardData.roles.forEach((r, ri) => {
         const color = typeof r.color === 'number' ? '#' + r.color.toString(16).padStart(6, '0') : r.color;
         html += `<div class="toggle-row">
           <label><input type="checkbox" ${r.enabled ? 'checked' : ''} onchange="wizardData.roles[${ri}].enabled=this.checked"> <span class="role-color-dot" style="background:${color}"></span> ${r.name}</label>
-          <input type="text" value="${r.name}" onchange="wizardData.roles[${ri}].name=this.value" placeholder="Nombre del rol">
+          <input type="text" value="${r.name}" onchange="wizardData.roles[${ri}].name=this.value" placeholder="Role name">
         </div>`;
       });
       return `<div class="card"><h3>🎭 Roles</h3>${html}</div>
-        <div class="wizard-nav"><button class="btn btn-ghost" onclick="wizardPrev()">← Anterior</button><button class="btn btn-primary" onclick="wizardNext()">Siguiente →</button></div>`;
+        <div class="wizard-nav"><button class="btn btn-ghost" onclick="wizardPrev()">← Back</button><button class="btn btn-primary" onclick="wizardNext()">Next →</button></div>`;
     }
 
     function renderWizardStep4() {
       return `
         <div class="card">
-          <h3>⚙️ Opciones adicionales</h3>
+          <h3>⚙️ Additional Options</h3>
           <div class="toggle-row">
-            <label><input type="checkbox" ${wizardData.deleteExisting ? 'checked' : ''} onchange="wizardData.deleteExisting=this.checked;renderSetupWizard()"> Borrar canales existentes antes de crear</label>
+            <label><input type="checkbox" ${wizardData.deleteExisting ? 'checked' : ''} onchange="wizardData.deleteExisting=this.checked;renderSetupWizard()"> Delete existing channels before creating</label>
           </div>
-          ${wizardData.deleteExisting ? '<div class="warning-box">⚠️ <strong>Cuidado:</strong> Esto eliminara TODOS los canales y categorias actuales del servidor. Esta accion es irreversible.</div>' : ''}
+          ${wizardData.deleteExisting ? '<div class="warning-box">⚠️ <strong>Warning:</strong> This will delete ALL current channels and categories from the server. This action is irreversible.</div>' : ''}
           <div class="toggle-row" style="margin-top:12px">
-            <label><input type="checkbox" ${wizardData.enableVerification ? 'checked' : ''} onchange="wizardData.enableVerification=this.checked;renderSetupWizard()"> Activar sistema de verificacion</label>
+            <label><input type="checkbox" ${wizardData.enableVerification ? 'checked' : ''} onchange="wizardData.enableVerification=this.checked;renderSetupWizard()"> Enable verification system</label>
           </div>
           ${wizardData.enableVerification ? `
             <div style="padding:12px;margin-top:8px">
               <div class="form-group">
-                <label>Tipo de verificacion</label>
+                <label>Verification type</label>
                 <select onchange="wizardData.verifyType=this.value" style="width:100%;padding:10px 14px;background:var(--bg-primary);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:14px">
-                  <option value="puzzle" ${wizardData.verifyType==='puzzle'?'selected':''}>🧩 Puzzle — Resolver acertijo</option>
-                  <option value="colors" ${wizardData.verifyType==='colors'?'selected':''}>🎨 Colores — Secuencia de emojis</option>
-                  <option value="math" ${wizardData.verifyType==='math'?'selected':''}>🔢 Matematicas — Resolver operacion</option>
-                  <option value="question" ${wizardData.verifyType==='question'?'selected':''}>📝 Pregunta — Respuesta libre</option>
+                  <option value="puzzle" ${wizardData.verifyType==='puzzle'?'selected':''}>🧩 Puzzle — Solve a riddle</option>
+                  <option value="colors" ${wizardData.verifyType==='colors'?'selected':''}>🎨 Colors — Emoji sequence</option>
+                  <option value="math" ${wizardData.verifyType==='math'?'selected':''}>🔢 Math — Solve an equation</option>
+                  <option value="question" ${wizardData.verifyType==='question'?'selected':''}>📝 Question — Free response</option>
                 </select>
               </div>
             </div>` : ''}
         </div>
-        <div class="wizard-nav"><button class="btn btn-ghost" onclick="wizardPrev()">← Anterior</button><button class="btn btn-primary" onclick="wizardNext()">Revisar →</button></div>`;
+        <div class="wizard-nav"><button class="btn btn-ghost" onclick="wizardPrev()">← Back</button><button class="btn btn-primary" onclick="wizardNext()">Review →</button></div>`;
     }
 
     function renderWizardStep5() {
@@ -864,24 +864,24 @@
 
       return `
         <div class="card">
-          <h3>📋 Resumen</h3>
-          <div class="info-box">Plantilla: <strong>${tpl.name}</strong> · ${enabledCats.length} categorias · ${enabledChannels} canales · ${enabledRoles.length} roles
-            ${wizardData.deleteExisting ? ' · <span style="color:var(--yellow)">Borrar existentes</span>' : ''}
-            ${wizardData.enableVerification ? ` · Verificacion (${wizardData.verifyType})` : ''}</div>
+          <h3>📋 Summary</h3>
+          <div class="info-box">Template: <strong>${tpl.name}</strong> · ${enabledCats.length} categories · ${enabledChannels} channels · ${enabledRoles.length} roles
+            ${wizardData.deleteExisting ? ' · <span style="color:var(--yellow)">Delete existing</span>' : ''}
+            ${wizardData.enableVerification ? ` · Verification (${wizardData.verifyType})` : ''}</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-            <div class="review-section"><h4>📁 Categorias y Canales</h4><ul class="review-list">${catsList}</ul></div>
+            <div class="review-section"><h4>📁 Categories & Channels</h4><ul class="review-list">${catsList}</ul></div>
             <div class="review-section"><h4>🎭 Roles</h4><ul class="review-list">${rolesList}</ul></div>
           </div>
         </div>
         <div id="wizard-progress" style="display:none">
           <div class="card">
-            <h3>⚙️ Creando servidor...</h3>
+            <h3>⚙️ Setting up server...</h3>
             <div class="progress-log" id="wizard-log"></div>
           </div>
         </div>
         <div class="wizard-nav" id="wizard-exec-nav">
-          <button class="btn btn-ghost" onclick="wizardPrev()">← Anterior</button>
-          <button class="btn btn-primary" onclick="executeWizard()" id="wizard-exec-btn">🚀 Crear Servidor</button>
+          <button class="btn btn-ghost" onclick="wizardPrev()">← Back</button>
+          <button class="btn btn-primary" onclick="executeWizard()" id="wizard-exec-btn">🚀 Create Server</button>
         </div>`;
     }
 
@@ -896,7 +896,7 @@
     async function executeWizard() {
       const btn = document.getElementById('wizard-exec-btn');
       btn.disabled = true;
-      btn.textContent = 'Creando...';
+      btn.textContent = 'Creating...';
       document.getElementById('wizard-progress').style.display = 'block';
       document.getElementById('wizard-exec-nav').style.display = 'none';
       const log = document.getElementById('wizard-log');
@@ -909,7 +909,7 @@
         log.scrollTop = log.scrollHeight;
       };
 
-      addLog('Iniciando setup del servidor...');
+      addLog('Starting server setup...');
 
       try {
         const body = {
@@ -947,7 +947,7 @@
             try {
               const data = JSON.parse(line.slice(6));
               if (data.type === 'progress') addLog(data.message);
-              else if (data.type === 'complete') { addLog(data.message, 'success'); addLog('--- Setup completado ---', 'success'); }
+              else if (data.type === 'complete') { addLog(data.message, 'success'); addLog('--- Setup complete ---', 'success'); }
               else if (data.type === 'error') addLog('ERROR: ' + data.message, 'error');
             } catch {}
           }
@@ -962,11 +962,11 @@
         // Show restart button
         const nav = document.getElementById('wizard-exec-nav');
         nav.style.display = 'flex';
-        nav.innerHTML = '<button class="btn btn-ghost" onclick="wizardStep=1;wizardData={templateKey:null,categories:[],roles:[],deleteExisting:false,enableVerification:false,verifyType:\'puzzle\'};renderSetupWizard()">🔄 Nuevo Setup</button><button class="btn btn-primary" onclick="showPage(\'server-info\')">Ver Servidor →</button>';
+        nav.innerHTML = '<button class="btn btn-ghost" onclick="wizardStep=1;wizardData={templateKey:null,categories:[],roles:[],deleteExisting:false,enableVerification:false,verifyType:\'puzzle\'};renderSetupWizard()">🔄 New Setup</button><button class="btn btn-primary" onclick="showPage(\'server-info\')">View Server →</button>';
       } catch (err) {
-        addLog('Error de conexion: ' + err.message, 'error');
+        addLog('Connection error: ' + err.message, 'error');
         btn.disabled = false;
-        btn.textContent = '🚀 Reintentar';
+        btn.textContent = '🚀 Retry';
         document.getElementById('wizard-exec-nav').style.display = 'flex';
       }
     }

@@ -12,35 +12,35 @@ const { settings } = require("../utils/database");
 const definitions = [
   new SlashCommandBuilder()
     .setName("setupverify")
-    .setDescription("Configura el sistema de verificación creativa")
-    .addChannelOption((o) => o.setName("canal").setDescription("Canal de verificación").setRequired(true))
-    .addRoleOption((o) => o.setName("rol").setDescription("Rol a dar al verificarse").setRequired(true))
+    .setDescription("Configure the creative verification system")
+    .addChannelOption((o) => o.setName("channel").setDescription("Verification channel").setRequired(true))
+    .addRoleOption((o) => o.setName("role").setDescription("Role to assign on verification").setRequired(true))
     .addStringOption((o) =>
-      o.setName("tipo").setDescription("Tipo de verificación").setRequired(true)
+      o.setName("type").setDescription("Verification type").setRequired(true)
         .addChoices(
-          { name: "🧩 Puzzle - Resolver un acertijo", value: "puzzle" },
-          { name: "🎨 Colores - Encontrar la secuencia", value: "colors" },
-          { name: "🔢 Matemáticas - Resolver operación", value: "math" },
-          { name: "📝 Pregunta personal - Responder una pregunta", value: "question" }
+          { name: "🧩 Puzzle - Solve a riddle", value: "puzzle" },
+          { name: "🎨 Colors - Find the sequence", value: "colors" },
+          { name: "🔢 Math - Solve an equation", value: "math" },
+          { name: "📝 Question - Answer a personal question", value: "question" }
         )
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 ];
 
-// Generadores de desafíos
+// Challenge generators
 const challenges = {
   puzzle() {
     const puzzles = [
-      { q: "Tengo ciudades, pero no casas. Tengo montañas, pero no árboles. Tengo agua, pero no peces. ¿Qué soy?", a: "mapa" },
-      { q: "Cuanto más me quitas, más grande me hago. ¿Qué soy?", a: "hoyo" },
-      { q: "Tengo manos pero no puedo aplaudir. ¿Qué soy?", a: "reloj" },
-      { q: "Camino sin pies, hablo sin boca. ¿Qué soy?", a: "carta" },
-      { q: "Siempre viene pero nunca llega. ¿Qué es?", a: "mañana" },
-      { q: "No tengo pies y corro, tengo agujas y no coso. ¿Qué soy?", a: "reloj" },
-      { q: "Vuelo sin alas, lloro sin ojos, y donde voy oscuridad destruyo. ¿Qué soy?", a: "nube" },
+      { q: "I have cities, but no houses. I have mountains, but no trees. I have water, but no fish. What am I?", a: "map" },
+      { q: "The more you take away from me, the bigger I get. What am I?", a: "hole" },
+      { q: "I have hands but I can't clap. What am I?", a: "clock" },
+      { q: "I walk without feet, I speak without a mouth. What am I?", a: "letter" },
+      { q: "It always comes but never arrives. What is it?", a: "tomorrow" },
+      { q: "I have no feet yet I run, I have needles yet I don't sew. What am I?", a: "clock" },
+      { q: "I fly without wings, I cry without eyes, and wherever I go darkness dies. What am I?", a: "cloud" },
     ];
     const p = puzzles[Math.floor(Math.random() * puzzles.length)];
-    return { question: p.q, answer: p.a, hint: `La respuesta tiene ${p.a.length} letras` };
+    return { question: p.q, answer: p.a, hint: `The answer has ${p.a.length} letters` };
   },
 
   colors() {
@@ -48,9 +48,9 @@ const challenges = {
     const sequence = [];
     for (let i = 0; i < 4; i++) sequence.push(emojis[Math.floor(Math.random() * emojis.length)]);
     return {
-      question: `Memoriza esta secuencia y escríbela:\n\n# ${sequence.join(" ")}`,
+      question: `Memorize this sequence and type it:\n\n# ${sequence.join(" ")}`,
       answer: sequence.join(""),
-      hint: "Escribe los emojis en orden sin espacios",
+      hint: "Type the emojis in order without spaces",
     };
   },
 
@@ -65,32 +65,31 @@ const challenges = {
     const op = ops[Math.floor(Math.random() * ops.length)];
     const result = op.fn(a, b);
     return {
-      question: `Resuelve: **${a} ${op.sym} ${b} = ?**`,
+      question: `Solve: **${a} ${op.sym} ${b} = ?**`,
       answer: result.toString(),
-      hint: `El resultado es un número ${result > 0 ? "positivo" : "negativo"}`,
+      hint: `The result is a ${result > 0 ? "positive" : "negative"} number`,
     };
   },
 
   question() {
     const questions = [
-      "¿Cuál es tu color favorito y por qué? (Responde con al menos 10 palabras)",
-      "¿Qué te trajo a este servidor? Cuéntanos en una frase",
-      "Describe tu hobby favorito en una oración",
-      "¿Cuál es tu comida favorita y dónde la descubriste?",
-      "Si pudieras viajar a cualquier lugar, ¿a dónde irías y por qué?",
+      "What is your favorite color and why? (Answer with at least 10 words)",
+      "What brought you to this server? Tell us in a sentence",
+      "Describe your favorite hobby in a sentence",
+      "What is your favorite food and where did you discover it?",
+      "If you could travel anywhere, where would you go and why?",
     ];
     const q = questions[Math.floor(Math.random() * questions.length)];
-    return { question: q, answer: "__freeform__", hint: "Responde de forma genuina con al menos 10 palabras" };
+    return { question: q, answer: "__freeform__", hint: "Answer genuinely with at least 10 words" };
   },
 };
 
 const handlers = {
   async setupverify(interaction) {
-    const channel = interaction.options.getChannel("canal");
-    const role = interaction.options.getRole("rol");
-    const type = interaction.options.getString("tipo");
+    const channel = interaction.options.getChannel("channel");
+    const role = interaction.options.getRole("role");
+    const type = interaction.options.getString("type");
 
-    // Guardar configuración
     const key = `verify-${interaction.guild.id}`;
     settings.set(key, {
       channelId: channel.id,
@@ -99,36 +98,35 @@ const handlers = {
       guildId: interaction.guild.id,
     });
 
-    // Crear el embed de verificación en el canal
     const typeNames = {
-      puzzle: "🧩 Resolver un acertijo",
-      colors: "🎨 Secuencia de colores",
-      math: "🔢 Problema matemático",
-      question: "📝 Pregunta personal",
+      puzzle: "🧩 Solve a riddle",
+      colors: "🎨 Color sequence",
+      math: "🔢 Math problem",
+      question: "📝 Personal question",
     };
 
     const embed = new EmbedBuilder()
       .setColor(0x5865f2)
-      .setTitle("🔐 Verificación Requerida")
+      .setTitle("🔐 Verification Required")
       .setDescription(
-        `¡Bienvenido al servidor! Para acceder a todos los canales, necesitas verificarte.\n\n` +
-        `**Tipo de desafío:** ${typeNames[type]}\n\n` +
-        `Haz clic en el botón de abajo para comenzar tu verificación.`
+        `Welcome to the server! To access all channels, you need to verify.\n\n` +
+        `**Challenge type:** ${typeNames[type]}\n\n` +
+        `Click the button below to start your verification.`
       )
-      .setFooter({ text: "Sistema de verificación creativa" })
+      .setFooter({ text: "Creative verification system" })
       .setTimestamp();
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId("verify_start")
-        .setLabel("🚀 Verificarme")
+        .setLabel("🚀 Verify Me")
         .setStyle(ButtonStyle.Primary)
     );
 
     await channel.send({ embeds: [embed], components: [row] });
 
     return interaction.reply({
-      content: `✅ Sistema de verificación configurado en ${channel} con el tipo **${typeNames[type]}**.\nRol asignado: @${role.name}`,
+      content: `✅ Verification configured in ${channel} with type **${typeNames[type]}**.\nRole assigned: @${role.name}`,
       ephemeral: true,
     });
   },

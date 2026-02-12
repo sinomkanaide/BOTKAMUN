@@ -1,7 +1,10 @@
 const fs = require("fs");
 const path = require("path");
 
-const DATA_DIR = path.join(__dirname, "../../data");
+// Use Railway volume mount if available, otherwise local ./data
+const DATA_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH
+  ? path.join(process.env.RAILWAY_VOLUME_MOUNT_PATH, "db")
+  : path.join(__dirname, "../../data");
 
 // Crear directorio de datos si no existe
 if (!fs.existsSync(DATA_DIR)) {

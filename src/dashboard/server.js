@@ -251,10 +251,16 @@ app.post("/api/send-message", requireAuth, async (req, res) => {
     if (embed) {
       const { EmbedBuilder } = require("discord.js");
       const e = new EmbedBuilder()
-        .setTitle(embed.title || undefined)
-        .setDescription(embed.description || undefined)
         .setColor(embed.color ? parseInt(embed.color.replace("#", ""), 16) : 0x5865f2);
-      if (embed.footer) e.setFooter({ text: embed.footer });
+      if (embed.title) e.setTitle(embed.title);
+      if (embed.description) e.setDescription(embed.description);
+      if (embed.image) e.setImage(embed.image);
+      if (embed.thumbnail) e.setThumbnail(embed.thumbnail);
+      if (embed.footer) {
+        const footerObj = { text: embed.footer };
+        if (embed.footerIcon) footerObj.iconURL = embed.footerIcon;
+        e.setFooter(footerObj);
+      }
       e.setTimestamp();
       msgOptions.embeds = [e];
     }

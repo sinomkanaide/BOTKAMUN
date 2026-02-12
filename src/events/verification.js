@@ -90,15 +90,7 @@ async function handleModal(interaction, client) {
       const member = await interaction.guild.members.fetch(interaction.user.id);
       await member.roles.add(pending.roleId);
 
-      // Remove the Slave role (level 0)
-      const ranks = getRanks(interaction.guild.id);
-      const slaveRank = ranks.find((r) => r.level === 0);
-      if (slaveRank) {
-        const slaveRole = interaction.guild.roles.cache.find((r) => r.name === slaveRank.name);
-        if (slaveRole && member.roles.cache.has(slaveRole.id)) {
-          await member.roles.remove(slaveRole);
-        }
-      }
+      // Slave role stays — it's only removed when claiming a game rank
 
       verifications.delete(interaction.user.id);
 

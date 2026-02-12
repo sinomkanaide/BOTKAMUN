@@ -626,23 +626,73 @@
     // ─── Messages Page ───
     function renderMessages() {
       const el = document.getElementById('messages-content');
-      if (!currentGuild) { el.innerHTML = noServerHtml('enviar mensajes'); return; }
+      if (!currentGuild) { el.innerHTML = noServerHtml('send messages'); return; }
 
       el.innerHTML = `
-        <div class="page-header"><h2>💬 Enviar Mensaje — ${currentGuildData?.name || ''}</h2><p>Envía un mensaje como el bot a un canal de este servidor</p></div>
-        <div class="card">
-          <h3>💬 Nuevo Mensaje</h3>
-          <div class="form-group"><label>Canal</label><select id="msg-channel">${channelOptions('text')}</select></div>
-          <div class="form-group"><label>Contenido (texto plano)</label><textarea id="msg-content" placeholder="Mensaje de texto..."></textarea></div>
-          <h4 style="margin:16px 0 12px;font-size:14px;color:var(--text-secondary)">O enviar como Embed:</h4>
-          <div class="form-grid">
-            <div class="form-group"><label>Título del embed</label><input type="text" id="msg-embed-title" placeholder="Título"></div>
-            <div class="form-group"><label>Color</label><input type="color" id="msg-embed-color" value="#6c5ce7"></div>
+        <div class="page-header"><h2>💬 Send Message — ${currentGuildData?.name || ''}</h2><p>Send a message as the bot to a channel</p></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start">
+          <div class="card">
+            <h3>💬 New Message</h3>
+            <div class="form-group"><label>Channel</label><select id="msg-channel">${channelOptions('text')}</select></div>
+            <div class="form-group"><label>Content (plain text)</label><textarea id="msg-content" placeholder="Text message..." oninput="updateEmbedPreview()"></textarea></div>
+            <h4 style="margin:16px 0 12px;font-size:14px;color:var(--text-secondary)">Embed Builder:</h4>
+            <div class="form-grid">
+              <div class="form-group"><label>Title</label><input type="text" id="msg-embed-title" placeholder="Embed title" oninput="updateEmbedPreview()"></div>
+              <div class="form-group"><label>Color</label><input type="color" id="msg-embed-color" value="#6c5ce7" oninput="updateEmbedPreview()"></div>
+            </div>
+            <div class="form-group"><label>Description</label><textarea id="msg-embed-desc" placeholder="Embed content... (supports **bold**, *italic*, [links](url))" oninput="updateEmbedPreview()"></textarea></div>
+            <div class="form-grid">
+              <div class="form-group"><label>Image URL</label><input type="text" id="msg-embed-image" placeholder="https://i.imgur.com/example.png" oninput="updateEmbedPreview()"></div>
+              <div class="form-group"><label>Thumbnail URL</label><input type="text" id="msg-embed-thumb" placeholder="https://i.imgur.com/thumb.png" oninput="updateEmbedPreview()"></div>
+            </div>
+            <div class="form-grid">
+              <div class="form-group"><label>Footer text</label><input type="text" id="msg-embed-footer" placeholder="Footer text" oninput="updateEmbedPreview()"></div>
+              <div class="form-group"><label>Footer icon URL</label><input type="text" id="msg-embed-footer-icon" placeholder="https://i.imgur.com/icon.png" oninput="updateEmbedPreview()"></div>
+            </div>
+            <div class="form-actions"><button class="btn btn-primary" onclick="sendMessage()">Send</button></div>
           </div>
-          <div class="form-group"><label>Descripción del embed</label><textarea id="msg-embed-desc" placeholder="Contenido del embed..."></textarea></div>
-          <div class="form-group"><label>Footer</label><input type="text" id="msg-embed-footer" placeholder="Texto del footer"></div>
-          <div class="form-actions"><button class="btn btn-primary" onclick="sendMessage()">Enviar</button></div>
+          <div class="card" style="position:sticky;top:20px">
+            <h3>👁️ Preview</h3>
+            <div id="embed-preview" style="background:var(--bg-primary);border-radius:8px;padding:16px;min-height:80px">
+              <span style="color:var(--text-secondary);font-size:13px">Start typing to see the preview...</span>
+            </div>
+          </div>
         </div>`;
+    }
+
+    function updateEmbedPreview() {
+      const title = document.getElementById('msg-embed-title')?.value || '';
+      const desc = document.getElementById('msg-embed-desc')?.value || '';
+      const color = document.getElementById('msg-embed-color')?.value || '#6c5ce7';
+      const image = document.getElementById('msg-embed-image')?.value || '';
+      const thumb = document.getElementById('msg-embed-thumb')?.value || '';
+      const footer = document.getElementById('msg-embed-footer')?.value || '';
+      const footerIcon = document.getElementById('msg-embed-footer-icon')?.value || '';
+      const content = document.getElementById('msg-content')?.value || '';
+      const preview = document.getElementById('embed-preview');
+      if (!preview) return;
+
+      if (!title && !desc && !content && !image) {
+        preview.innerHTML = '<span style="color:var(--text-secondary);font-size:13px">Start typing to see the preview...</span>';
+        return;
+      }
+
+      let html = '';
+      if (content) html += `<div style="margin-bottom:12px;color:var(--text-primary);font-size:14px">${content.replace(/\n/g, '<br>')}</div>`;
+      if (title || desc || image || thumb) {
+        html += `<div style="border-left:4px solid ${color};border-radius:4px;background:var(--bg-secondary);padding:12px;position:relative">`;
+        if (thumb) html += `<img src="${thumb}" alt="" style="float:right;max-width:80px;max-height:80px;border-radius:6px;margin-left:12px" onerror="this.style.display='none'" onload="this.style.display='block'">`;
+        if (title) html += `<div style="font-weight:700;color:var(--text-primary);font-size:15px;margin-bottom:6px">${title}</div>`;
+        if (desc) html += `<div style="color:var(--text-secondary);font-size:13px;line-height:1.4;white-space:pre-wrap">${desc.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>')}</div>`;
+        if (image) html += `<img src="${image}" alt="" style="max-width:100%;border-radius:6px;margin-top:10px" onerror="this.style.display='none'" onload="this.style.display='block'">`;
+        if (footer) {
+          html += `<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary)">`;
+          if (footerIcon) html += `<img src="${footerIcon}" alt="" style="width:16px;height:16px;border-radius:50%" onerror="this.style.display='none'">`;
+          html += `${footer}</div>`;
+        }
+        html += '</div>';
+      }
+      preview.innerHTML = html;
     }
 
     async function sendMessage() {
@@ -651,25 +701,36 @@
       const embedTitle = document.getElementById('msg-embed-title').value;
       const embedDesc = document.getElementById('msg-embed-desc').value;
       const embedColor = document.getElementById('msg-embed-color').value;
+      const embedImage = document.getElementById('msg-embed-image').value;
+      const embedThumb = document.getElementById('msg-embed-thumb').value;
       const embedFooter = document.getElementById('msg-embed-footer').value;
-      if (!channelId) return toast('Selecciona un canal', true);
-      if (!content && !embedDesc) return toast('Escribe un mensaje o embed', true);
+      const embedFooterIcon = document.getElementById('msg-embed-footer-icon').value;
+      if (!channelId) return toast('Select a channel', true);
+      if (!content && !embedDesc && !embedTitle) return toast('Write a message or embed', true);
       const body = { channelId };
       if (content) body.content = content;
-      if (embedTitle || embedDesc) {
+      if (embedTitle || embedDesc || embedImage) {
         body.embed = {};
         if (embedTitle) body.embed.title = embedTitle;
         if (embedDesc) body.embed.description = embedDesc;
         if (embedColor) body.embed.color = embedColor;
+        if (embedImage) body.embed.image = embedImage;
+        if (embedThumb) body.embed.thumbnail = embedThumb;
         if (embedFooter) body.embed.footer = embedFooter;
+        if (embedFooterIcon) body.embed.footerIcon = embedFooterIcon;
       }
       const res = await fetch(`${API}/api/send-message`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       if (res.ok) {
-        toast('✅ Mensaje enviado');
+        toast('Message sent!');
         document.getElementById('msg-content').value = '';
         document.getElementById('msg-embed-title').value = '';
         document.getElementById('msg-embed-desc').value = '';
-      } else { const err = await res.json(); toast(`❌ ${err.error}`, true); }
+        document.getElementById('msg-embed-image').value = '';
+        document.getElementById('msg-embed-thumb').value = '';
+        document.getElementById('msg-embed-footer').value = '';
+        document.getElementById('msg-embed-footer-icon').value = '';
+        updateEmbedPreview();
+      } else { const err = await res.json(); toast(`Error: ${err.error}`, true); }
     }
 
     // ─── Warnings Page ───
@@ -678,8 +739,8 @@
       if (!currentGuild) { el.innerHTML = noServerHtml('ver advertencias'); return; }
 
       el.innerHTML = `
-        <div class="page-header"><h2>⚠️ Advertencias — ${currentGuildData?.name || ''}</h2><p>Historial de advertencias de moderación de este servidor</p></div>
-        <div class="card"><table><thead><tr><th>Usuario ID</th><th>Razón</th><th>Moderador</th><th>Fecha</th></tr></thead>
+        <div class="page-header"><h2>⚠️ Warnings — ${currentGuildData?.name || ''}</h2><p>Moderation warning history for this server</p></div>
+        <div class="card"><table><thead><tr><th>User ID</th><th>Reason</th><th>Moderator</th><th>Date</th></tr></thead>
         <tbody id="warnings-table"></tbody></table></div>`;
 
       const res = await fetch(`${API}/api/warnings`);
@@ -695,7 +756,7 @@
           rows.push(`<tr><td><code>${userId}</code></td><td>${w.reason}</td><td>${w.mod || '-'}</td><td>${w.date ? new Date(w.date).toLocaleDateString() : '-'}</td></tr>`);
         }
       }
-      tbody.innerHTML = rows.length ? rows.join('') : '<tr><td colspan="4" style="text-align:center;color:var(--text-secondary)">Sin advertencias en este servidor</td></tr>';
+      tbody.innerHTML = rows.length ? rows.join('') : '<tr><td colspan="4" style="text-align:center;color:var(--text-secondary)">No warnings in this server</td></tr>';
     }
 
     // ─── Verification Page ───

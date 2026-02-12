@@ -761,7 +761,7 @@
       const c = automodConfig;
       const logChOpts = '<option value="">None (disabled)</option>' + (currentGuildData?.channels?.filter(ch => ch.type === 0).map(ch => `<option value="${ch.id}" ${c.logChannelId === ch.id ? 'selected' : ''}>#${ch.name}</option>`).join('') || '');
       const immuneIds = c.immuneRoleIds || [];
-      const roleCheckboxes = currentGuildData?.roles?.filter(r => r.name !== '@everyone').map(r => `<label style="display:flex;align-items:center;gap:6px;padding:4px 0;cursor:pointer"><input type="checkbox" class="am-immune-cb" value="${r.id}" ${immuneIds.includes(r.id) ? 'checked' : ''}> ${r.name}</label>`).join('') || '<span style="color:var(--text-muted)">No roles found</span>';
+      const roleCheckboxes = currentGuildData?.roles?.filter(r => r.name !== '@everyone').map(r => `<label><input type="checkbox" class="am-immune-cb" value="${r.id}" ${immuneIds.includes(r.id) ? 'checked' : ''}>${r.name}</label>`).join('') || '<span style="color:var(--text-muted)">No roles found</span>';
 
       function tip(text) {
         return ` <span class="am-tip" data-tip="${text.replace(/"/g, '&quot;')}">ℹ️</span>`;
@@ -777,7 +777,10 @@
           .am-tip:hover { opacity:1 }
           .am-tip:hover::after { content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#1a1a2e;color:#e8e8e8;padding:10px 14px;border-radius:8px;font-size:12.5px;line-height:1.5;white-space:normal;width:240px;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.7);z-index:100;pointer-events:none;border:1px solid #3a3a5c;font-weight:400 }
           .am-tip:hover::before { content:'';position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:#1a1a2e;z-index:101 }
-          .am-roles-list { max-height:160px;overflow-y:auto;padding:8px;background:var(--bg-primary);border:1px solid var(--border);border-radius:8px }
+          .am-roles-list { max-height:180px;overflow-y:auto;padding:10px 14px;background:var(--bg-primary);border:1px solid var(--border);border-radius:8px;display:grid;grid-template-columns:1fr 1fr;gap:4px 16px }
+          .am-roles-list label { display:flex!important;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:13px!important;color:var(--text-primary)!important;margin:0!important;transition:background .15s }
+          .am-roles-list label:hover { background:var(--bg-tertiary) }
+          .am-roles-list input[type="checkbox"] { width:16px!important;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0 }
         </style>
         <div class="page-header"><h2>🛡️ AutoMod — ${currentGuildData?.name || ''}</h2><p>Automated moderation with no human moderators needed</p></div>
 
@@ -788,8 +791,8 @@
           </div>
           <div class="form-grid" style="margin-top:12px">
             <div class="form-group"><label>Log Channel${tip('The channel where AutoMod will send logs of every action it takes (deletes, mutes, kicks, bans)')}</label><select id="am-log-channel">${logChOpts}</select></div>
-            <div class="form-group"><label>Immune Roles${tip('Roles that bypass all AutoMod checks. Users with any of these roles will never be filtered. Admins are always immune.')}</label><div class="am-roles-list">${roleCheckboxes}</div></div>
           </div>
+          <div class="form-group" style="margin-top:4px"><label>Immune Roles${tip('Roles that bypass all AutoMod checks. Users with any of these roles will never be filtered. Admins are always immune.')}</label><div class="am-roles-list">${roleCheckboxes}</div></div>
         </div>
 
         <div class="card">

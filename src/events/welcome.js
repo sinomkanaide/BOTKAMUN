@@ -1,8 +1,29 @@
 const { EmbedBuilder } = require("discord.js");
 const { settings } = require("../utils/database");
+const { getRanks } = require("../commands/egypt-roles");
 
 async function onMemberJoin(member, client) {
-  // Find configured or auto-detected welcome channel
+  // ─── Assign Slave role (level 0) to new members ───
+  try {
+    const ranks = getRanks(member.guild.id);
+    const slaveRank = ranks.find((r) => r.level === 0);
+    if (slaveRank) {
+      let slaveRole = member.guild.roles.cache.find((r) => r.name === slaveRank.name);
+      if (!slaveRole) {
+        slaveRole = await member.guild.roles.create({
+          name: slaveRank.name,
+          color: slaveRank.color,
+          hoist: true,
+          reason: "Auto-created for new member entry rank",
+        });
+      }
+      await member.roles.add(slaveRole);
+    }
+  } catch (err) {
+    console.error("Error assigning Slave role:", err);
+  }
+
+  // ─── Welcome message ───
   const welcomeChannelId = process.env.WELCOME_CHANNEL_ID;
   let channel = null;
 

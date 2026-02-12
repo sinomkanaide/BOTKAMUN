@@ -250,6 +250,28 @@ function registerClaimRoutes(app, getClient) {
     res.json({ success: true });
   });
 
+  app.post("/api/gameapi/:guildId/test", requireAuth, async (req, res) => {
+    const config = getApiConfig(req.params.guildId);
+    if (!config || !config.baseUrl || !config.endpoint) {
+      return res.status(400).json({ error: "Save the API config first" });
+    }
+    const testWallet = req.body.wallet || "0x0000000000000000000000000000000000000000";
+    const url = `${config.baseUrl}${config.endpoint.replace("{wallet}", testWallet)}`;
+    try {
+      const headers = { "Content-Type": "application/json" };
+      if (config.apiKey) {
+        headers["Authorization"] = `Bearer ${config.apiKey}`;
+        headers["X-API-Key"] = config.apiKey;
+      }
+      const apiRes = await fetch(url, { headers });
+      const data = await apiRes.json();
+      const level = config.levelField.split(".").reduce((obj, key) => obj?.[key], data);
+      res.json({ status: apiRes.status, url, data, levelField: config.levelField, levelValue: level !== undefined ? level : null });
+    } catch (err) {
+      res.status(502).json({ error: err.message, url });
+    }
+  });
+
   // ─── Linked wallets ───
   app.get("/api/wallets/:guildId", requireAuth, (req, res) => {
     const all = settings.getAll();

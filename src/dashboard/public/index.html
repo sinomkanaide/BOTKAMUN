@@ -896,19 +896,21 @@
     }
 
     async function testGameApi() {
-      const baseUrl = document.getElementById('api-base-url').value.trim();
-      const endpoint = document.getElementById('api-endpoint').value.trim();
-      const levelField = document.getElementById('api-level-field').value.trim();
       const resultEl = document.getElementById('api-test-result');
-      if (!baseUrl || !endpoint || !levelField) { resultEl.innerHTML = '<span style="color:var(--red)">Fill in all fields first</span>'; return; }
-      const testWallet = '0x0000000000000000000000000000000000000000';
-      const url = `${baseUrl}${endpoint.replace('{wallet}', testWallet)}`;
-      resultEl.innerHTML = '<span style="color:var(--text-secondary)">Testing...</span>';
+      resultEl.innerHTML = '<span style="color:var(--text-secondary)">Testing via server...</span>';
       try {
-        const res = await fetch(url);
-        const data = await res.json();
-        const level = levelField.split('.').reduce((obj, key) => obj?.[key], data);
-        resultEl.innerHTML = `<div style="margin-top:8px;padding:10px;background:var(--bg-primary);border-radius:8px;font-size:13px"><strong style="color:var(--green)">✅ API responded (HTTP ${res.status})</strong><br><code style="font-size:12px">${JSON.stringify(data).slice(0, 200)}</code><br>Level field "<code>${levelField}</code>" = <strong>${level !== undefined ? level : 'not found ⚠️'}</strong></div>`;
+        const res = await fetch(`${API}/api/gameapi/${currentGuild}/test`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        const result = await res.json();
+        if (!res.ok) {
+          resultEl.innerHTML = `<span style="color:var(--red)">❌ ${result.error}${result.url ? '<br><code style="font-size:11px">' + result.url + '</code>' : ''}</span>`;
+          return;
+        }
+        const levelFound = result.levelValue !== null && result.levelValue !== undefined;
+        resultEl.innerHTML = `<div style="margin-top:8px;padding:10px;background:var(--bg-primary);border-radius:8px;font-size:13px"><strong style="color:var(--green)">✅ API responded (HTTP ${result.status})</strong><br><code style="font-size:11px">${result.url}</code><br><code style="font-size:12px">${JSON.stringify(result.data).slice(0, 300)}</code><br>Level field "<code>${result.levelField}</code>" = <strong>${levelFound ? result.levelValue : 'not found ⚠️'}</strong></div>`;
       } catch (err) {
         resultEl.innerHTML = `<span style="color:var(--red)">❌ Connection failed: ${err.message}</span>`;
       }

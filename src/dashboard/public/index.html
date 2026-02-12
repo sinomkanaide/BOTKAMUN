@@ -759,8 +759,12 @@
       el.innerHTML = '<div class="page-header"><h2>🏛️ Rangos Egipcios</h2><p>Loading...</p></div>';
 
       try {
-        const res = await fetch(`${API}/api/ranks/${currentGuild}`);
-        const ranks = await res.json();
+        const [ranksRes, apiRes] = await Promise.all([
+          fetch(`${API}/api/ranks/${currentGuild}`),
+          fetch(`${API}/api/gameapi/${currentGuild}`)
+        ]);
+        const ranks = await ranksRes.json();
+        const gameApi = await apiRes.json();
 
         let ranksHtml = '';
         if (ranks.length) {
@@ -800,10 +804,24 @@
             </div>
             <div class="form-actions"><button class="btn btn-primary" onclick="addRank()">Add Rank</button></div>
           </div>
+          <div class="card">
+            <h3>🔌 Game API Configuration</h3>
+            <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px">Configure the API that verifies player levels when claiming ranks via wallet</p>
+            <div class="form-grid">
+              <div class="form-group"><label>Base URL</label><input type="text" id="api-base-url" value="${gameApi.baseUrl || ''}" placeholder="https://api.tapkamun.fun"></div>
+              <div class="form-group"><label>Endpoint <span style="color:var(--text-secondary);font-size:11px">({wallet} = placeholder)</span></label><input type="text" id="api-endpoint" value="${gameApi.endpoint || ''}" placeholder="/api/public/check/level/{wallet}"></div>
+              <div class="form-group"><label>Level field in JSON response</label><input type="text" id="api-level-field" value="${gameApi.levelField || ''}" placeholder="level"></div>
+              <div class="form-group"><label>API Key <span style="color:var(--text-secondary);font-size:11px">(optional)</span></label><input type="text" id="api-key" value="${gameApi.apiKey || ''}" placeholder="Leave empty if public"></div>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-primary" onclick="saveGameApi()">Save API Config</button>
+              <button class="btn btn-ghost" onclick="testGameApi()">Test Connection</button>
+            </div>
+            <div id="api-test-result"></div>
+          </div>
           <div class="info-box">
             <strong>Discord Commands:</strong><br>
             <code>/setuproles</code> — Create all roles in Discord<br>
-            <code>/setgameapi</code> — Configure the game API for level lookup<br>
             <code>/setupclaim</code> — Create the claim channel with buttons<br>
             <code>/ranks</code> — Show the hierarchy in chat
           </div>`;
@@ -858,6 +876,42 @@
         if (res.ok) { toast('Rank deleted'); renderRanks(); }
         else toast('Error deleting rank', true);
       } catch { toast('Error deleting rank', true); }
+    }
+
+    async function saveGameApi() {
+      const baseUrl = document.getElementById('api-base-url').value.trim();
+      const endpoint = document.getElementById('api-endpoint').value.trim();
+      const levelField = document.getElementById('api-level-field').value.trim();
+      const apiKey = document.getElementById('api-key').value.trim();
+      if (!baseUrl || !endpoint || !levelField) return toast('Fill in Base URL, Endpoint, and Level field', true);
+      try {
+        const res = await fetch(`${API}/api/gameapi/${currentGuild}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ baseUrl, endpoint, levelField, apiKey })
+        });
+        if (res.ok) toast('Game API config saved');
+        else toast('Error saving API config', true);
+      } catch { toast('Error saving API config', true); }
+    }
+
+    async function testGameApi() {
+      const baseUrl = document.getElementById('api-base-url').value.trim();
+      const endpoint = document.getElementById('api-endpoint').value.trim();
+      const levelField = document.getElementById('api-level-field').value.trim();
+      const resultEl = document.getElementById('api-test-result');
+      if (!baseUrl || !endpoint || !levelField) { resultEl.innerHTML = '<span style="color:var(--red)">Fill in all fields first</span>'; return; }
+      const testWallet = '0x0000000000000000000000000000000000000000';
+      const url = `${baseUrl}${endpoint.replace('{wallet}', testWallet)}`;
+      resultEl.innerHTML = '<span style="color:var(--text-secondary)">Testing...</span>';
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        const level = levelField.split('.').reduce((obj, key) => obj?.[key], data);
+        resultEl.innerHTML = `<div style="margin-top:8px;padding:10px;background:var(--bg-primary);border-radius:8px;font-size:13px"><strong style="color:var(--green)">✅ API responded (HTTP ${res.status})</strong><br><code style="font-size:12px">${JSON.stringify(data).slice(0, 200)}</code><br>Level field "<code>${levelField}</code>" = <strong>${level !== undefined ? level : 'not found ⚠️'}</strong></div>`;
+      } catch (err) {
+        resultEl.innerHTML = `<span style="color:var(--red)">❌ Connection failed: ${err.message}</span>`;
+      }
     }
 
     // ─── Wallets Page ───

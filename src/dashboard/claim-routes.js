@@ -1,6 +1,6 @@
 const { ethers } = require("ethers");
 const { getClaimData, consumeClaim } = require("../events/claim");
-const { getRanks, getApiConfig, getRankForLevel, setRanks } = require("../commands/egypt-roles");
+const { getRanks, getApiConfig, setApiConfig, getRankForLevel, setRanks } = require("../commands/egypt-roles");
 const { settings } = require("../utils/database");
 
 function registerClaimRoutes(app, getClient) {
@@ -228,6 +228,26 @@ function registerClaimRoutes(app, getClient) {
     ranks = ranks.filter((r) => r.roleKey !== req.params.roleKey);
     setRanks(req.params.guildId, ranks);
     res.json({ success: true, ranks });
+  });
+
+  // ─── Game API config ───
+  app.get("/api/gameapi/:guildId", requireAuth, (req, res) => {
+    const config = getApiConfig(req.params.guildId);
+    res.json(config || { baseUrl: "", endpoint: "", levelField: "", apiKey: "" });
+  });
+
+  app.put("/api/gameapi/:guildId", requireAuth, (req, res) => {
+    const { baseUrl, endpoint, levelField, apiKey } = req.body;
+    if (!baseUrl || !endpoint || !levelField) {
+      return res.status(400).json({ error: "baseUrl, endpoint, and levelField are required" });
+    }
+    setApiConfig(req.params.guildId, {
+      baseUrl: baseUrl.replace(/\/$/, ""),
+      endpoint,
+      levelField,
+      apiKey: apiKey || null,
+    });
+    res.json({ success: true });
   });
 
   // ─── Linked wallets ───

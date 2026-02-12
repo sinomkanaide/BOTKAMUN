@@ -197,11 +197,12 @@ app.get("/api/announcements", requireAuth, (req, res) => {
 });
 
 app.post("/api/announcements", requireAuth, async (req, res) => {
-  const { id, channelId, title, message, cron, color, pingRole, active } = req.body;
+  const { id, channelId, title, message, cron, color, pingRole, active, guildId } = req.body;
   const annId = id || require("crypto").randomUUID().slice(0, 8);
 
   const ann = {
     channelId,
+    guildId: guildId || null,
     title,
     message,
     cron,

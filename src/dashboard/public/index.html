@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -226,14 +226,14 @@
   <div id="login-screen">
     <div class="login-box">
       <h1>🤖 Bot Panel</h1>
-      <p>Inicia sesión con tu cuenta de Discord</p>
+      <p>Sign in with your Discord account</p>
       <div class="error-msg" id="login-error"></div>
       <a href="/api/auth/discord" class="btn btn-primary" style="margin-top:12px;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;width:100%">
         <svg width="20" height="15" viewBox="0 0 71 55" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M60.1 4.9A58.5 58.5 0 0 0 45.4.2a.2.2 0 0 0-.2.1 40.8 40.8 0 0 0-1.8 3.7 54 54 0 0 0-16.2 0A37.4 37.4 0 0 0 25.4.3a.2.2 0 0 0-.2-.1A58.4 58.4 0 0 0 10.5 5a.2.2 0 0 0-.1 0C1.5 18 -.9 30.6.3 43a.2.2 0 0 0 .1.2 58.7 58.7 0 0 0 17.7 9 .2.2 0 0 0 .3-.1 42 42 0 0 0 3.6-5.9.2.2 0 0 0-.1-.3 38.7 38.7 0 0 1-5.5-2.6.2.2 0 0 1 0-.4l1.1-.9a.2.2 0 0 1 .2 0 41.9 41.9 0 0 0 35.6 0 .2.2 0 0 1 .2 0l1.1.9a.2.2 0 0 1 0 .3c-1.8 1-3.6 1.8-5.5 2.7a.2.2 0 0 0-.1.3 47.2 47.2 0 0 0 3.6 5.8.2.2 0 0 0 .3.1A58.5 58.5 0 0 0 70.2 43a.2.2 0 0 0 .1-.2c1.4-14.7-2.4-27.4-10.1-38.7a.2.2 0 0 0-.1-.1zM23.7 35.3c-3.4 0-6.1-3.1-6.1-6.9s2.7-6.9 6.1-6.9 6.2 3.1 6.1 6.9c0 3.8-2.7 6.9-6.1 6.9zm22.6 0c-3.4 0-6.1-3.1-6.1-6.9s2.7-6.9 6.1-6.9 6.2 3.1 6.1 6.9c0 3.8-2.7 6.9-6.1 6.9z"/></svg>
-        Iniciar sesión con Discord
+        Sign in with Discord
       </a>
       <a href="/api/bot/invite" target="_blank" class="btn btn-ghost" style="margin-top:10px;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;width:100%">
-        <span>➕</span> Añadir bot a un servidor
+        <span>➕</span> Add bot to a server
       </a>
     </div>
   </div>
@@ -251,26 +251,26 @@
 
       <!-- Server Selector -->
       <div class="server-selector">
-        <label>Servidor</label>
+        <label>Server</label>
         <select id="guild-select" onchange="onGuildSelect()">
-          <option value="">Selecciona un servidor...</option>
+          <option value="">Select a server...</option>
         </select>
       </div>
 
-      <div class="nav-section">Principal</div>
+      <div class="nav-section">Main</div>
       <div class="nav-item active" data-page="overview" onclick="showPage('overview')">
         <span class="icon">📊</span><span>Overview</span>
       </div>
 
-      <div class="nav-section">Gestión del servidor</div>
+      <div class="nav-section">Server Management</div>
       <div class="nav-item" data-page="server-info" onclick="showPage('server-info')">
-        <span class="icon">🏠</span><span>Info & Canales</span>
+        <span class="icon">🏠</span><span>Info & Channels</span>
       </div>
       <div class="nav-item" data-page="announcements" onclick="showPage('announcements')">
-        <span class="icon">📢</span><span>Anuncios</span>
+        <span class="icon">📢</span><span>Announcements</span>
       </div>
       <div class="nav-item" data-page="messages" onclick="showPage('messages')">
-        <span class="icon">💬</span><span>Enviar Mensaje</span>
+        <span class="icon">💬</span><span>Send Message</span>
       </div>
       <div class="nav-item" data-page="automod" onclick="showPage('automod')">
         <span class="icon">🛡️</span><span>AutoMod</span>
@@ -279,10 +279,10 @@
         <span class="icon">⚠️</span><span>Warnings</span>
       </div>
       <div class="nav-item" data-page="verification" onclick="showPage('verification')">
-        <span class="icon">🔐</span><span>Verificación</span>
+        <span class="icon">🔐</span><span>Verification</span>
       </div>
       <div class="nav-item" data-page="ranks" onclick="showPage('ranks')">
-        <span class="icon">🏛️</span><span>Rangos Egipcios</span>
+        <span class="icon">🏛️</span><span>Egyptian Ranks</span>
       </div>
       <div class="nav-item" data-page="wallets" onclick="showPage('wallets')">
         <span class="icon">🔗</span><span>Wallets</span>
@@ -296,10 +296,10 @@
 
       <div class="sidebar-footer">
         <a href="/api/bot/invite" target="_blank" class="nav-item" style="text-decoration:none;color:inherit">
-          <span class="icon">➕</span><span>Añadir a servidor</span>
+          <span class="icon">➕</span><span>Add to server</span>
         </a>
         <div class="nav-item" onclick="logout()">
-          <span class="icon">🚪</span><span>Cerrar sesión</span>
+          <span class="icon">🚪</span><span>Logout</span>
         </div>
       </div>
     </nav>
@@ -310,19 +310,19 @@
       <div class="page active" id="page-overview">
         <div class="page-header">
           <h2>Dashboard</h2>
-          <p>Vista general del bot</p>
+          <p>Bot overview</p>
         </div>
         <div class="stats-grid">
-          <div class="stat-card"><div class="stat-icon">🏠</div><div class="stat-value" id="stat-guilds">-</div><div class="stat-label">Servidores</div></div>
-          <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value" id="stat-members">-</div><div class="stat-label">Miembros totales</div></div>
-          <div class="stat-card"><div class="stat-icon">💬</div><div class="stat-value" id="stat-channels">-</div><div class="stat-label">Canales</div></div>
-          <div class="stat-card"><div class="stat-icon">📡</div><div class="stat-value" id="stat-ping">-</div><div class="stat-label">Latencia (ms)</div></div>
+          <div class="stat-card"><div class="stat-icon">🏠</div><div class="stat-value" id="stat-guilds">-</div><div class="stat-label">Servers</div></div>
+          <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value" id="stat-members">-</div><div class="stat-label">Total Members</div></div>
+          <div class="stat-card"><div class="stat-icon">💬</div><div class="stat-value" id="stat-channels">-</div><div class="stat-label">Channels</div></div>
+          <div class="stat-card"><div class="stat-icon">📡</div><div class="stat-value" id="stat-ping">-</div><div class="stat-label">Latency (ms)</div></div>
           <div class="stat-card"><div class="stat-icon">⏱️</div><div class="stat-value" id="stat-uptime">-</div><div class="stat-label">Uptime</div></div>
         </div>
         <div class="card">
-          <h3>📅 Anuncios Programados</h3>
+          <h3>📅 Scheduled Announcements</h3>
           <table>
-            <thead><tr><th>ID</th><th>Título</th><th>Frecuencia</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <thead><tr><th>ID</th><th>Title</th><th>Frequency</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody id="overview-announcements"></tbody>
           </table>
         </div>
@@ -393,8 +393,8 @@
       const error = params.get('error');
       if (error) {
         const el = document.getElementById('login-error');
-        const msgs = { unauthorized: 'Tu cuenta de Discord no tiene acceso a este panel.', token_failed: 'Error al autenticar con Discord. Intenta de nuevo.', no_code: 'Error en el proceso de login. Intenta de nuevo.', server_error: 'Error del servidor. Intenta de nuevo.' };
-        el.textContent = msgs[error] || 'Error desconocido';
+        const msgs = { unauthorized: 'Your Discord account does not have access to this panel.', token_failed: 'Error authenticating with Discord. Try again.', no_code: 'Error in the login process. Try again.', server_error: 'Server error. Try again.' };
+        el.textContent = msgs[error] || 'Unknown error';
         el.style.display = 'block';
         window.history.replaceState({}, '', '/');
       }
@@ -435,7 +435,7 @@
     }
 
     function noServerHtml(action) {
-      return `<div class="no-server"><div class="no-server-icon">🏠</div><p>Selecciona un servidor en el panel izquierdo para ${action}</p></div>`;
+      return `<div class="no-server"><div class="no-server-icon">🏠</div><p>Select a server in the left panel to ${action}</p></div>`;
     }
 
     // ─── Load Dashboard ───
@@ -460,9 +460,9 @@
         // Populate server selector
         const select = document.getElementById('guild-select');
         const prevVal = select.value;
-        select.innerHTML = '<option value="">Selecciona un servidor...</option>';
+        select.innerHTML = '<option value="">Select a server...</option>';
         allGuilds.forEach(g => {
-          select.innerHTML += `<option value="${g.id}">${g.name} (${g.members} miembros)</option>`;
+          select.innerHTML += `<option value="${g.id}">${g.name} (${g.members} members)</option>`;
         });
         if (prevVal) select.value = prevVal;
 
@@ -498,7 +498,7 @@
     // ─── Server Info Page ───
     function renderServerInfo() {
       const el = document.getElementById('server-info-content');
-      if (!currentGuild || !currentGuildData) { el.innerHTML = noServerHtml('ver su información'); return; }
+      if (!currentGuild || !currentGuildData) { el.innerHTML = noServerHtml('view its information'); return; }
       const g = currentGuildData;
 
       // Group channels
@@ -518,27 +518,27 @@
         .map(r => `<div style="padding:4px 0;font-size:14px"><span style="color:${r.color};font-weight:600">● ${r.name}</span> <span style="color:var(--text-secondary);font-size:12px">(${r.members})</span></div>`).join('');
 
       el.innerHTML = `
-        <div class="page-header"><h2>🏠 ${g.name}</h2><p>${g.members} miembros · ${g.channels.length} canales · ${g.roles.length} roles</p></div>
+        <div class="page-header"><h2>🏠 ${g.name}</h2><p>${g.members} members · ${g.channels.length} channels · ${g.roles.length} roles</p></div>
         <div class="stats-grid">
-          <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value">${g.members}</div><div class="stat-label">Miembros</div></div>
-          <div class="stat-card"><div class="stat-icon">💬</div><div class="stat-value">${g.channels.filter(c=>c.type===0).length}</div><div class="stat-label">Canales de texto</div></div>
-          <div class="stat-card"><div class="stat-icon">🔊</div><div class="stat-value">${g.channels.filter(c=>c.type===2).length}</div><div class="stat-label">Canales de voz</div></div>
+          <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value">${g.members}</div><div class="stat-label">Members</div></div>
+          <div class="stat-card"><div class="stat-icon">💬</div><div class="stat-value">${g.channels.filter(c=>c.type===0).length}</div><div class="stat-label">Text Channels</div></div>
+          <div class="stat-card"><div class="stat-icon">🔊</div><div class="stat-value">${g.channels.filter(c=>c.type===2).length}</div><div class="stat-label">Voice Channels</div></div>
           <div class="stat-card"><div class="stat-icon">🎭</div><div class="stat-value">${g.roles.length}</div><div class="stat-label">Roles</div></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-          <div class="card"><h3>💬 Canales</h3><div class="channel-tree">${channelHtml || '<p style="color:var(--text-secondary)">Sin canales</p>'}</div></div>
-          <div class="card"><h3>🎭 Roles</h3>${rolesHtml || '<p style="color:var(--text-secondary)">Sin roles</p>'}</div>
+          <div class="card"><h3>💬 Channels</h3><div class="channel-tree">${channelHtml || '<p style="color:var(--text-secondary)">No channels</p>'}</div></div>
+          <div class="card"><h3>🎭 Roles</h3>${rolesHtml || '<p style="color:var(--text-secondary)">No roles</p>'}</div>
         </div>`;
     }
 
     // ─── Channel dropdown helper ───
     function channelOptions(typeFilter) {
-      if (!currentGuildData) return '<option value="">Sin servidor</option>';
+      if (!currentGuildData) return '<option value="">No server</option>';
       const channels = currentGuildData.channels.filter(c => {
         if (typeFilter === 'text') return c.type === 0 || c.type === 5;
         return true;
       });
-      let html = '<option value="">Selecciona canal...</option>';
+      let html = '<option value="">Select channel...</option>';
       channels.forEach(c => {
         const icon = c.type === 2 ? '🔊' : c.type === 5 ? '📢' : '#';
         html += `<option value="${c.id}">${icon} ${c.name}</option>`;
@@ -549,30 +549,30 @@
     // ─── Announcements Page ───
     async function renderAnnouncements() {
       const el = document.getElementById('announcements-content');
-      if (!currentGuild) { el.innerHTML = noServerHtml('gestionar anuncios'); return; }
+      if (!currentGuild) { el.innerHTML = noServerHtml('manage announcements'); return; }
 
       el.innerHTML = `
-        <div class="page-header"><h2>📢 Anuncios — ${currentGuildData?.name || ''}</h2><p>Crea y gestiona anuncios programados para este servidor</p></div>
+        <div class="page-header"><h2>📢 Announcements — ${currentGuildData?.name || ''}</h2><p>Create and manage scheduled announcements for this server</p></div>
         <div class="card">
-          <h3>➕ Nuevo Anuncio Programado</h3>
+          <h3>➕ New Scheduled Announcement</h3>
           <div class="form-grid">
-            <div class="form-group"><label>Canal</label><select id="ann-channel">${channelOptions('text')}</select></div>
-            <div class="form-group"><label>Frecuencia</label>
+            <div class="form-group"><label>Channel</label><select id="ann-channel">${channelOptions('text')}</select></div>
+            <div class="form-group"><label>Frequency</label>
               <select id="ann-cron">
-                <option value="0 * * * *">Cada hora</option><option value="0 */6 * * *">Cada 6 horas</option>
-                <option value="0 8 * * *">Diario (8 AM)</option><option value="0 12 * * *">Diario (12 PM)</option>
-                <option value="0 20 * * *">Diario (8 PM)</option><option value="0 9 * * 1-5">Lun-Vie (9 AM)</option>
-                <option value="0 9 * * 1">Semanal (Lunes)</option><option value="0 9 1 * *">Mensual (día 1)</option>
+                <option value="0 * * * *">Every hour</option><option value="0 */6 * * *">Every 6 hours</option>
+                <option value="0 8 * * *">Daily (8 AM)</option><option value="0 12 * * *">Daily (12 PM)</option>
+                <option value="0 20 * * *">Daily (8 PM)</option><option value="0 9 * * 1-5">Mon-Fri (9 AM)</option>
+                <option value="0 9 * * 1">Weekly (Monday)</option><option value="0 9 1 * *">Monthly (1st)</option>
               </select>
             </div>
-            <div class="form-group"><label>Título</label><input type="text" id="ann-title" placeholder="Título del anuncio"></div>
+            <div class="form-group"><label>Title</label><input type="text" id="ann-title" placeholder="Announcement title"></div>
             <div class="form-group"><label>Color</label><input type="color" id="ann-color" value="#6c5ce7"></div>
           </div>
-          <div class="form-group"><label>Mensaje</label><textarea id="ann-message" placeholder="Contenido del anuncio..."></textarea></div>
-          <div class="form-actions"><button class="btn btn-primary" onclick="createAnnouncement()">Crear Anuncio</button></div>
+          <div class="form-group"><label>Message</label><textarea id="ann-message" placeholder="Announcement content..."></textarea></div>
+          <div class="form-actions"><button class="btn btn-primary" onclick="createAnnouncement()">Create Announcement</button></div>
         </div>
-        <div class="card"><h3>📋 Anuncios Activos</h3>
-          <table><thead><tr><th>ID</th><th>Título</th><th>Canal</th><th>Frecuencia</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <div class="card"><h3>📋 Active Announcements</h3>
+          <table><thead><tr><th>ID</th><th>Title</th><th>Channel</th><th>Frequency</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody id="announcements-table"></tbody></table>
         </div>`;
 
@@ -591,14 +591,14 @@
       const tbody = document.getElementById(tableId);
       if (!tbody) return;
       const entries = Object.entries(data);
-      if (!entries.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-secondary)">No hay anuncios programados</td></tr>'; return; }
+      if (!entries.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-secondary)">No scheduled announcements</td></tr>'; return; }
       const channelName = (id) => { if (!currentGuildData) return id?.slice(-6) || '-'; const ch = currentGuildData.channels.find(c => c.id === id); return ch ? `#${ch.name}` : id?.slice(-6) || '-'; };
       tbody.innerHTML = entries.map(([id, a]) => `<tr>
         <td><code style="color:var(--accent-light)">${id}</code></td>
         <td>${a.title || '-'}</td>
         <td>${channelName(a.channelId)}</td>
         <td><code style="font-size:12px">${a.cron || '-'}</code></td>
-        <td><span class="badge ${a.active ? 'badge-green' : 'badge-red'}">${a.active ? 'Activo' : 'Pausado'}</span></td>
+        <td><span class="badge ${a.active ? 'badge-green' : 'badge-red'}">${a.active ? 'Active' : 'Paused'}</span></td>
         <td><button class="btn btn-danger btn-sm" onclick="deleteAnnouncement('${id}')">🗑️</button></td>
       </tr>`).join('');
     }
@@ -619,15 +619,15 @@
         guildId: currentGuild,
         active: true,
       };
-      if (!body.channelId || !body.message) return toast('Selecciona canal y escribe un mensaje', true);
+      if (!body.channelId || !body.message) return toast('Select a channel and write a message', true);
       const res = await fetch(`${API}/api/announcements`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      if (res.ok) { toast('✅ Anuncio creado'); renderAnnouncements(); }
+      if (res.ok) { toast('Announcement created'); renderAnnouncements(); }
     }
 
     async function deleteAnnouncement(id) {
-      if (!confirm('¿Eliminar este anuncio?')) return;
+      if (!confirm('Delete this announcement?')) return;
       await fetch(`${API}/api/announcements/${id}`, { method: 'DELETE' });
-      toast('🗑️ Anuncio eliminado');
+      toast('Announcement deleted');
       renderAnnouncements();
       loadAnnouncementsOverview();
     }
@@ -768,7 +768,7 @@
       }
 
       function toggle(label, key, enabled, tooltip) {
-        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-weight:600">${label}${tooltip ? tip(tooltip) : ''}</span><label style="cursor:pointer"><input type="checkbox" id="am-${key}" ${enabled ? 'checked' : ''} onchange="updateAutomodField('${key}')"> Enabled</label></div>`;
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-weight:600">${label}${tooltip ? tip(tooltip) : ''}</span><label style="cursor:pointer"><input type="checkbox" id="am-${key}" ${enabled ? 'checked' : ''}> Enabled</label></div>`;
       }
 
       el.innerHTML = `
@@ -779,7 +779,7 @@
           .am-tip:hover::before { content:'';position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:#1a1a2e;z-index:101 }
           .am-roles-list { max-height:180px;overflow-y:auto;padding:10px 14px;background:var(--bg-primary);border:1px solid var(--border);border-radius:8px;display:grid;grid-template-columns:1fr 1fr;gap:4px 16px }
           .am-roles-list label { display:flex!important;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:13px!important;color:var(--text-primary)!important;margin:0!important;transition:background .15s }
-          .am-roles-list label:hover { background:var(--bg-tertiary) }
+          .am-roles-list label:hover { background:var(--bg-hover) }
           .am-roles-list input[type="checkbox"] { width:16px!important;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0 }
         </style>
         <div class="page-header"><h2>🛡️ AutoMod — ${currentGuildData?.name || ''}</h2><p>Automated moderation with no human moderators needed</p></div>
@@ -933,7 +933,7 @@
     // ─── Warnings Page ───
     async function renderWarnings() {
       const el = document.getElementById('warnings-content');
-      if (!currentGuild) { el.innerHTML = noServerHtml('ver advertencias'); return; }
+      if (!currentGuild) { el.innerHTML = noServerHtml('view warnings'); return; }
 
       el.innerHTML = `
         <div class="page-header"><h2>⚠️ Warnings — ${currentGuildData?.name || ''}</h2><p>Moderation warning history for this server</p></div>
@@ -959,53 +959,53 @@
     // ─── Verification Page ───
     async function renderVerification() {
       const el = document.getElementById('verification-content');
-      if (!currentGuild) { el.innerHTML = noServerHtml('ver la verificación'); return; }
+      if (!currentGuild) { el.innerHTML = noServerHtml('view verification'); return; }
 
-      el.innerHTML = '<div class="page-header"><h2>🔐 Verificación</h2><p>Cargando configuración...</p></div>';
+      el.innerHTML = '<div class="page-header"><h2>🔐 Verification</h2><p>Loading configuration...</p></div>';
 
       try {
         const res = await fetch(`${API}/api/settings/${currentGuild}`);
         const data = await res.json();
         const v = data.verify || {};
 
-        const typeNames = { puzzle: '🧩 Puzzle — Resolver acertijo', colors: '🎨 Colores — Secuencia de emojis', math: '🔢 Matemáticas — Resolver operación', question: '📝 Pregunta — Respuesta libre' };
+        const typeNames = { puzzle: '🧩 Puzzle — Solve a riddle', colors: '🎨 Colors — Emoji sequence', math: '🔢 Math — Solve an equation', question: '📝 Question — Free response' };
 
         if (v.channelId) {
           const channelName = currentGuildData?.channels.find(c => c.id === v.channelId)?.name || v.channelId;
           const roleName = currentGuildData?.roles.find(r => r.id === v.roleId)?.name || v.roleId;
 
           el.innerHTML = `
-            <div class="page-header"><h2>🔐 Verificación — ${currentGuildData?.name || ''}</h2><p>Sistema de verificación creativa configurado</p></div>
+            <div class="page-header"><h2>🔐 Verification — ${currentGuildData?.name || ''}</h2><p>Creative verification system configured</p></div>
             <div class="card">
-              <h3>✅ Verificación Activa</h3>
-              <div class="config-item"><span class="config-label">Canal</span><span class="config-value">#${channelName}</span></div>
-              <div class="config-item"><span class="config-label">Rol asignado</span><span class="config-value">@${roleName}</span></div>
-              <div class="config-item"><span class="config-label">Tipo de desafío</span><span class="config-value">${typeNames[v.type] || v.type}</span></div>
+              <h3>✅ Verification Active</h3>
+              <div class="config-item"><span class="config-label">Channel</span><span class="config-value">#${channelName}</span></div>
+              <div class="config-item"><span class="config-label">Assigned role</span><span class="config-value">@${roleName}</span></div>
+              <div class="config-item"><span class="config-label">Challenge type</span><span class="config-value">${typeNames[v.type] || v.type}</span></div>
             </div>
             <div class="info-box">
-              <strong>Para cambiar la configuración</strong> usa el comando <code>/setupverify</code> en Discord.<br>
-              Opciones: canal, rol a dar, y tipo de verificación (puzzle, colores, matemáticas, pregunta).
+              <strong>To change the configuration</strong> use the <code>/setupverify</code> command in Discord.<br>
+              Options: channel, role to assign, and verification type (puzzle, colors, math, question).
             </div>`;
         } else {
           el.innerHTML = `
-            <div class="page-header"><h2>🔐 Verificación — ${currentGuildData?.name || ''}</h2><p>Sistema de verificación creativa</p></div>
+            <div class="page-header"><h2>🔐 Verification — ${currentGuildData?.name || ''}</h2><p>Creative verification system</p></div>
             <div class="card" style="text-align:center;padding:40px">
               <div style="font-size:48px;margin-bottom:16px">🔐</div>
-              <h3 style="justify-content:center">Verificación no configurada</h3>
-              <p style="color:var(--text-secondary);margin-top:8px">Usa el comando <code>/setupverify</code> en Discord para activarla.</p>
+              <h3 style="justify-content:center">Verification not configured</h3>
+              <p style="color:var(--text-secondary);margin-top:8px">Use the <code>/setupverify</code> command in Discord to activate it.</p>
               <div class="info-box" style="text-align:left;margin-top:20px">
-                <strong>Cómo configurar:</strong><br><br>
-                <code>/setupverify canal:#verificación rol:@Verificado tipo:Puzzle</code><br><br>
-                <strong>Tipos disponibles:</strong><br>
-                🧩 <strong>Puzzle</strong> — Resolver un acertijo en español<br>
-                🎨 <strong>Colores</strong> — Memorizar secuencia de emojis<br>
-                🔢 <strong>Matemáticas</strong> — Resolver operación aritmética<br>
-                📝 <strong>Pregunta</strong> — Responder con al menos 10 palabras
+                <strong>How to configure:</strong><br><br>
+                <code>/setupverify channel:#verification role:@Citizen type:Puzzle</code><br><br>
+                <strong>Available types:</strong><br>
+                🧩 <strong>Puzzle</strong> — Solve a riddle<br>
+                🎨 <strong>Colors</strong> — Memorize emoji sequence<br>
+                🔢 <strong>Math</strong> — Solve arithmetic operation<br>
+                📝 <strong>Question</strong> — Respond with at least 10 words
               </div>
             </div>`;
         }
       } catch {
-        el.innerHTML = noServerHtml('ver la verificación');
+        el.innerHTML = noServerHtml('view verification');
       }
     }
 
@@ -1014,7 +1014,7 @@
       const el = document.getElementById('ranks-content');
       if (!currentGuild) { el.innerHTML = noServerHtml('manage ranks'); return; }
 
-      el.innerHTML = '<div class="page-header"><h2>🏛️ Rangos Egipcios</h2><p>Loading...</p></div>';
+      el.innerHTML = '<div class="page-header"><h2>🏛️ Egyptian Ranks</h2><p>Loading...</p></div>';
 
       try {
         const [ranksRes, apiRes] = await Promise.all([
@@ -1044,7 +1044,7 @@
         }
 
         el.innerHTML = `
-          <div class="page-header"><h2>🏛️ Rangos Egipcios — ${currentGuildData?.name || ''}</h2><p>Manage the Egyptian rank hierarchy</p></div>
+          <div class="page-header"><h2>🏛️ Egyptian Ranks — ${currentGuildData?.name || ''}</h2><p>Manage the Egyptian rank hierarchy</p></div>
           <div class="card">
             <h3>📜 Current Hierarchy</h3>
             <table>

@@ -760,13 +760,25 @@
 
       const c = automodConfig;
       const logChOpts = '<option value="">None (disabled)</option>' + (currentGuildData?.channels?.filter(ch => ch.type === 0).map(ch => `<option value="${ch.id}" ${c.logChannelId === ch.id ? 'selected' : ''}>#${ch.name}</option>`).join('') || '');
-      const roleOpts = currentGuildData?.roles?.filter(r => r.name !== '@everyone').map(r => `<option value="${r.id}" ${(c.immuneRoleIds || []).includes(r.id) ? 'selected' : ''}>${r.name}</option>`).join('') || '';
+      const immuneIds = c.immuneRoleIds || [];
+      const roleCheckboxes = currentGuildData?.roles?.filter(r => r.name !== '@everyone').map(r => `<label style="display:flex;align-items:center;gap:6px;padding:4px 0;cursor:pointer"><input type="checkbox" class="am-immune-cb" value="${r.id}" ${immuneIds.includes(r.id) ? 'checked' : ''}> ${r.name}</label>`).join('') || '<span style="color:var(--text-muted)">No roles found</span>';
 
-      function toggle(label, key, enabled) {
-        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-weight:600">${label}</span><label style="cursor:pointer"><input type="checkbox" id="am-${key}" ${enabled ? 'checked' : ''} onchange="updateAutomodField('${key}')"> Enabled</label></div>`;
+      function tip(text) {
+        return ` <span class="am-tip" data-tip="${text.replace(/"/g, '&quot;')}">ℹ️</span>`;
+      }
+
+      function toggle(label, key, enabled, tooltip) {
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-weight:600">${label}${tooltip ? tip(tooltip) : ''}</span><label style="cursor:pointer"><input type="checkbox" id="am-${key}" ${enabled ? 'checked' : ''} onchange="updateAutomodField('${key}')"> Enabled</label></div>`;
       }
 
       el.innerHTML = `
+        <style>
+          .am-tip { position:relative;cursor:help;font-size:14px;opacity:0.7;transition:opacity .2s }
+          .am-tip:hover { opacity:1 }
+          .am-tip:hover::after { content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg-tertiary);color:var(--text-primary);padding:8px 12px;border-radius:8px;font-size:12px;white-space:normal;width:220px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.4);z-index:100;pointer-events:none;border:1px solid var(--border);font-weight:400 }
+          .am-tip:hover::before { content:'';position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--bg-tertiary);z-index:101 }
+          .am-roles-list { max-height:160px;overflow-y:auto;padding:8px;background:var(--bg-primary);border:1px solid var(--border);border-radius:8px }
+        </style>
         <div class="page-header"><h2>🛡️ AutoMod — ${currentGuildData?.name || ''}</h2><p>Automated moderation with no human moderators needed</p></div>
 
         <div class="card">
@@ -775,75 +787,75 @@
             <label style="font-size:16px;cursor:pointer"><input type="checkbox" id="am-enabled" ${c.enabled ? 'checked' : ''} style="width:20px;height:20px"> <strong>AutoMod ${c.enabled ? 'ON' : 'OFF'}</strong></label>
           </div>
           <div class="form-grid" style="margin-top:12px">
-            <div class="form-group"><label>Log Channel</label><select id="am-log-channel">${logChOpts}</select></div>
-            <div class="form-group"><label>Immune Roles (bypass automod)</label><select id="am-immune-roles" multiple size="4" style="width:100%;padding:6px;background:var(--bg-primary);border:1px solid var(--border);border-radius:8px;color:var(--text-primary)">${roleOpts}</select></div>
+            <div class="form-group"><label>Log Channel${tip('The channel where AutoMod will send logs of every action it takes (deletes, mutes, kicks, bans)')}</label><select id="am-log-channel">${logChOpts}</select></div>
+            <div class="form-group"><label>Immune Roles${tip('Roles that bypass all AutoMod checks. Users with any of these roles will never be filtered. Admins are always immune.')}</label><div class="am-roles-list">${roleCheckboxes}</div></div>
           </div>
         </div>
 
         <div class="card">
           <h3>🚫 Spam Filter</h3>
-          ${toggle('Rate Limit & Duplicate Detection', 'spam', c.spamFilter?.enabled)}
+          ${toggle('Rate Limit & Duplicate Detection', 'spam', c.spamFilter?.enabled, 'Detects users sending too many messages too fast, or repeating the same message multiple times. Spammers get auto-muted.')}
           <div class="form-grid" style="margin-top:10px">
-            <div class="form-group"><label>Max messages in window</label><input type="number" id="am-spam-max" value="${c.spamFilter?.maxMessages || 5}" min="2" max="20"></div>
-            <div class="form-group"><label>Time window (ms)</label><input type="number" id="am-spam-window" value="${c.spamFilter?.timeWindow || 5000}" min="1000" max="30000" step="1000"></div>
-            <div class="form-group"><label>Duplicate threshold</label><input type="number" id="am-spam-dupes" value="${c.spamFilter?.duplicateThreshold || 3}" min="2" max="10"></div>
-            <div class="form-group"><label>Mute duration (min)</label><input type="number" id="am-spam-mute" value="${c.spamFilter?.muteDuration || 10}" min="1" max="1440"></div>
+            <div class="form-group"><label>Max messages in window${tip('How many messages a user can send within the time window before being flagged as spam. Example: 5 messages in 5 seconds = spam.')}</label><input type="number" id="am-spam-max" value="${c.spamFilter?.maxMessages || 5}" min="2" max="20"></div>
+            <div class="form-group"><label>Time window (seconds)${tip('The time period to count messages. If a user sends more than the max in this window, they are flagged. Example: 5 seconds.')}</label><input type="number" id="am-spam-window" value="${Math.round((c.spamFilter?.timeWindow || 5000) / 1000)}" min="1" max="30"></div>
+            <div class="form-group"><label>Duplicate threshold${tip('How many identical messages in a row trigger the duplicate filter. Example: 3 means if a user sends the same message 3 times, they are flagged.')}</label><input type="number" id="am-spam-dupes" value="${c.spamFilter?.duplicateThreshold || 3}" min="2" max="10"></div>
+            <div class="form-group"><label>Mute duration (min)${tip('How long the spammer will be muted (timed out) in minutes after being caught.')}</label><input type="number" id="am-spam-mute" value="${c.spamFilter?.muteDuration || 10}" min="1" max="1440"></div>
           </div>
         </div>
 
         <div class="card">
           <h3>🔤 Word Filter</h3>
-          ${toggle('Block blacklisted words/phrases', 'words', c.wordFilter?.enabled)}
-          <div class="form-group" style="margin-top:10px"><label>Blacklist (one per line)</label><textarea id="am-word-blacklist" rows="4" placeholder="badword1\nbadphrase two\netc">${(c.wordFilter?.blacklist || []).join('\n')}</textarea></div>
+          ${toggle('Block blacklisted words/phrases', 'words', c.wordFilter?.enabled, 'Automatically deletes messages containing banned words or phrases and warns the user. Add your blacklist below.')}
+          <div class="form-group" style="margin-top:10px"><label>Blacklist (one per line)${tip('Add words or phrases to block, one per line. The filter checks if the message contains any of these. Case-insensitive.')}</label><textarea id="am-word-blacklist" rows="4" placeholder="badword1\nbadphrase two\netc">${(c.wordFilter?.blacklist || []).join('\n')}</textarea></div>
         </div>
 
         <div class="card">
           <h3>🔗 Link Filter</h3>
-          ${toggle('Block links and Discord invites', 'links', c.linkFilter?.enabled)}
+          ${toggle('Block links and Discord invites', 'links', c.linkFilter?.enabled, 'Prevents users from posting Discord invite links or external URLs. You can whitelist trusted domains.')}
           <div class="form-grid" style="margin-top:10px">
-            <div class="form-group"><label><input type="checkbox" id="am-link-invites" ${c.linkFilter?.blockInvites ? 'checked' : ''}> Block Discord invites</label></div>
-            <div class="form-group"><label><input type="checkbox" id="am-link-all" ${c.linkFilter?.blockAllLinks ? 'checked' : ''}> Block all links (except whitelist)</label></div>
+            <div class="form-group"><label><input type="checkbox" id="am-link-invites" ${c.linkFilter?.blockInvites ? 'checked' : ''}> Block Discord invites${tip('Blocks discord.gg and discord.com/invite links to prevent advertising other servers.')}</label></div>
+            <div class="form-group"><label><input type="checkbox" id="am-link-all" ${c.linkFilter?.blockAllLinks ? 'checked' : ''}> Block all links (except whitelist)${tip('Blocks ALL URLs except domains in the whitelist below. Useful to prevent phishing or self-promotion.')}</label></div>
           </div>
-          <div class="form-group"><label>Whitelist domains (one per line)</label><textarea id="am-link-whitelist" rows="3" placeholder="youtube.com\ntwitter.com">${(c.linkFilter?.whitelist || []).join('\n')}</textarea></div>
+          <div class="form-group"><label>Whitelist domains (one per line)${tip('Domains allowed even when blocking all links. Example: youtube.com, twitter.com, github.com')}</label><textarea id="am-link-whitelist" rows="3" placeholder="youtube.com\ntwitter.com">${(c.linkFilter?.whitelist || []).join('\n')}</textarea></div>
         </div>
 
         <div class="card">
           <h3>📢 Mention Spam</h3>
-          ${toggle('Block mass mentions', 'mentions', c.mentionSpam?.enabled)}
+          ${toggle('Block mass mentions', 'mentions', c.mentionSpam?.enabled, 'Prevents users from tagging too many people or roles in a single message. Commonly used by raiders to annoy everyone.')}
           <div class="form-grid" style="margin-top:10px">
-            <div class="form-group"><label>Max mentions per message</label><input type="number" id="am-mention-max" value="${c.mentionSpam?.maxMentions || 5}" min="2" max="30"></div>
-            <div class="form-group"><label>Mute duration (min)</label><input type="number" id="am-mention-mute" value="${c.mentionSpam?.muteDuration || 5}" min="1" max="1440"></div>
+            <div class="form-group"><label>Max mentions per message${tip('Maximum number of @user or @role mentions allowed in a single message before it is considered spam.')}</label><input type="number" id="am-mention-max" value="${c.mentionSpam?.maxMentions || 5}" min="2" max="30"></div>
+            <div class="form-group"><label>Mute duration (min)${tip('How long the user will be muted after mention spamming.')}</label><input type="number" id="am-mention-mute" value="${c.mentionSpam?.muteDuration || 5}" min="1" max="1440"></div>
           </div>
         </div>
 
         <div class="card">
           <h3>🔠 Caps Filter</h3>
-          ${toggle('Block excessive CAPS', 'caps', c.capsFilter?.enabled)}
+          ${toggle('Block excessive CAPS', 'caps', c.capsFilter?.enabled, 'Deletes messages written mostly in UPPERCASE. Prevents shouting and aggressive messages like "BUY THIS NOW!!!".')}
           <div class="form-grid" style="margin-top:10px">
-            <div class="form-group"><label>Max caps percentage</label><input type="number" id="am-caps-pct" value="${c.capsFilter?.maxCapsPercent || 70}" min="50" max="100">%</div>
-            <div class="form-group"><label>Min message length to check</label><input type="number" id="am-caps-minlen" value="${c.capsFilter?.minLength || 10}" min="5" max="50"></div>
+            <div class="form-group"><label>Max caps percentage${tip('The maximum % of uppercase letters allowed. Messages above this are deleted. 70% means a message like "HELLO world" (71% caps) would be caught.')}</label><input type="number" id="am-caps-pct" value="${c.capsFilter?.maxCapsPercent || 70}" min="50" max="100">%</div>
+            <div class="form-group"><label>Min message length${tip('Only checks messages with at least this many letters. Short messages like "OK" or "LOL" are ignored.')}</label><input type="number" id="am-caps-minlen" value="${c.capsFilter?.minLength || 10}" min="5" max="50"></div>
           </div>
         </div>
 
         <div class="card">
           <h3>🛡️ Anti-Raid</h3>
-          ${toggle('Detect mass joins and lockdown', 'raid', c.antiRaid?.enabled)}
+          ${toggle('Detect mass joins and lockdown', 'raid', c.antiRaid?.enabled, 'Detects when many accounts join the server at once (a raid). Automatically locks the server by disabling messages for @everyone, then unlocks after the set duration.')}
           <div class="form-grid" style="margin-top:10px">
-            <div class="form-group"><label>Max joins to trigger</label><input type="number" id="am-raid-max" value="${c.antiRaid?.maxJoins || 10}" min="3" max="50"></div>
-            <div class="form-group"><label>Time window (seconds)</label><input type="number" id="am-raid-window" value="${c.antiRaid?.timeWindow || 30}" min="5" max="120"></div>
-            <div class="form-group"><label>Lockdown duration (seconds)</label><input type="number" id="am-raid-duration" value="${c.antiRaid?.lockdownDuration || 300}" min="30" max="3600"></div>
+            <div class="form-group"><label>Max joins to trigger${tip('How many users must join within the time window to trigger a raid alert. Example: 10 joins in 30 seconds = raid.')}</label><input type="number" id="am-raid-max" value="${c.antiRaid?.maxJoins || 10}" min="3" max="50"></div>
+            <div class="form-group"><label>Time window (seconds)${tip('The time period to count joins. If max joins is reached within this window, lockdown activates.')}</label><input type="number" id="am-raid-window" value="${c.antiRaid?.timeWindow || 30}" min="5" max="120"></div>
+            <div class="form-group"><label>Lockdown duration (seconds)${tip('How long the server stays locked (no one can send messages). After this, permissions are restored automatically.')}</label><input type="number" id="am-raid-duration" value="${c.antiRaid?.lockdownDuration || 300}" min="30" max="3600"></div>
           </div>
         </div>
 
         <div class="card">
           <h3>⚖️ Warning Escalation</h3>
-          ${toggle('Auto-action on warning accumulation', 'escalation', c.escalation?.enabled)}
+          ${toggle('Auto-action on warning accumulation', 'escalation', c.escalation?.enabled, 'Automatically takes action when a user accumulates too many warnings. Example: 3 warns = mute, 5 warns = kick, 7 warns = ban.')}
           <div id="am-thresholds" style="margin-top:10px">
             ${(c.escalation?.thresholds || []).map((t, i) => `
               <div class="form-grid" style="align-items:end;margin-bottom:6px">
-                <div class="form-group"><label>Warns</label><input type="number" id="am-esc-warns-${i}" value="${t.warns}" min="1" max="20"></div>
-                <div class="form-group"><label>Action</label><select id="am-esc-action-${i}"><option value="mute" ${t.action === 'mute' ? 'selected' : ''}>Mute</option><option value="kick" ${t.action === 'kick' ? 'selected' : ''}>Kick</option><option value="ban" ${t.action === 'ban' ? 'selected' : ''}>Ban</option></select></div>
-                <div class="form-group"><label>Duration (min, mute only)</label><input type="number" id="am-esc-dur-${i}" value="${t.duration || 0}" min="0"></div>
+                <div class="form-group"><label>Warns${tip('Number of accumulated warnings needed to trigger this action.')}</label><input type="number" id="am-esc-warns-${i}" value="${t.warns}" min="1" max="20"></div>
+                <div class="form-group"><label>Action${tip('What happens when the user reaches this many warnings. Mute = timeout, Kick = remove from server, Ban = permanent ban.')}</label><select id="am-esc-action-${i}"><option value="mute" ${t.action === 'mute' ? 'selected' : ''}>Mute</option><option value="kick" ${t.action === 'kick' ? 'selected' : ''}>Kick</option><option value="ban" ${t.action === 'ban' ? 'selected' : ''}>Ban</option></select></div>
+                <div class="form-group"><label>Duration (min)${tip('Only applies to Mute action. How long the mute lasts in minutes. Ignored for kick/ban.')}</label><input type="number" id="am-esc-dur-${i}" value="${t.duration || 0}" min="0"></div>
               </div>`).join('')}
           </div>
         </div>
@@ -855,11 +867,11 @@
       const config = {
         enabled: document.getElementById('am-enabled').checked,
         logChannelId: document.getElementById('am-log-channel').value || null,
-        immuneRoleIds: Array.from(document.getElementById('am-immune-roles').selectedOptions).map(o => o.value),
+        immuneRoleIds: Array.from(document.querySelectorAll('.am-immune-cb:checked')).map(cb => cb.value),
         spamFilter: {
           enabled: document.getElementById('am-spam')?.checked || false,
           maxMessages: parseInt(document.getElementById('am-spam-max')?.value) || 5,
-          timeWindow: parseInt(document.getElementById('am-spam-window')?.value) || 5000,
+          timeWindow: (parseInt(document.getElementById('am-spam-window')?.value) || 5) * 1000,
           duplicateThreshold: parseInt(document.getElementById('am-spam-dupes')?.value) || 3,
           action: 'mute',
           muteDuration: parseInt(document.getElementById('am-spam-mute')?.value) || 10,

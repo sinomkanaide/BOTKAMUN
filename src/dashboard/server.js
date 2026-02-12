@@ -648,6 +648,19 @@ app.delete("/api/tickets/type/:guildId/:typeId", requireAuth, (req, res) => {
   res.json({ success: true });
 });
 
+// ─── AutoMod ───
+const { getAutomodConfig, setAutomodConfig, DEFAULT_AUTOMOD } = require("../events/automod");
+
+app.get("/api/automod/:guildId", requireAuth, (req, res) => {
+  const config = getAutomodConfig(req.params.guildId);
+  res.json(config);
+});
+
+app.put("/api/automod/:guildId", requireAuth, (req, res) => {
+  setAutomodConfig(req.params.guildId, req.body);
+  res.json({ success: true });
+});
+
 // ─── Settings ───
 app.get("/api/settings/:guildId", requireAuth, (req, res) => {
   const welcomeConfig = settings.get(`welcome-${req.params.guildId}`) || {};

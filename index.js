@@ -43,6 +43,7 @@ const welcomeEvents = require("./src/events/welcome");
 const verificationEvents = require("./src/events/verification");
 const ticketEvents = require("./src/events/tickets");
 const claimEvents = require("./src/events/claim");
+const automod = require("./src/events/automod");
 
 // ─── Registrar handlers ───
 const allHandlers = {
@@ -139,8 +140,14 @@ client.on("interactionCreate", async (interaction) => {
   }
 });
 
+// ─── AutoMod on messages ───
+client.on("messageCreate", (message) => {
+  automod.handleMessage(message, client);
+});
+
 // ─── Eventos ───
 client.on("guildMemberAdd", (member) => {
+  automod.handleMemberJoin(member, client);
   welcomeEvents.onMemberJoin(member, client);
   verificationEvents.onMemberJoin(member, client);
 });

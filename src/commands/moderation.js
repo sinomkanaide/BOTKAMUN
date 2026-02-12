@@ -8,120 +8,120 @@ const { warnings } = require("../utils/database");
 const definitions = [
   new SlashCommandBuilder()
     .setName("kick")
-    .setDescription("Expulsa a un usuario del servidor")
-    .addUserOption((o) => o.setName("usuario").setDescription("Usuario").setRequired(true))
-    .addStringOption((o) => o.setName("razon").setDescription("Razón"))
+    .setDescription("Kick a user from the server")
+    .addUserOption((o) => o.setName("user").setDescription("User to kick").setRequired(true))
+    .addStringOption((o) => o.setName("reason").setDescription("Reason"))
     .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers),
 
   new SlashCommandBuilder()
     .setName("ban")
-    .setDescription("Banea a un usuario del servidor")
-    .addUserOption((o) => o.setName("usuario").setDescription("Usuario").setRequired(true))
-    .addStringOption((o) => o.setName("razon").setDescription("Razón"))
+    .setDescription("Ban a user from the server")
+    .addUserOption((o) => o.setName("user").setDescription("User to ban").setRequired(true))
+    .addStringOption((o) => o.setName("reason").setDescription("Reason"))
     .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
 
   new SlashCommandBuilder()
     .setName("mute")
-    .setDescription("Silencia a un usuario")
-    .addUserOption((o) => o.setName("usuario").setDescription("Usuario").setRequired(true))
+    .setDescription("Timeout a user")
+    .addUserOption((o) => o.setName("user").setDescription("User to mute").setRequired(true))
     .addIntegerOption((o) =>
-      o.setName("minutos").setDescription("Duración en minutos").setRequired(true).setMinValue(1).setMaxValue(40320)
+      o.setName("minutes").setDescription("Duration in minutes").setRequired(true).setMinValue(1).setMaxValue(40320)
     )
-    .addStringOption((o) => o.setName("razon").setDescription("Razón"))
+    .addStringOption((o) => o.setName("reason").setDescription("Reason"))
     .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
 
   new SlashCommandBuilder()
     .setName("unmute")
-    .setDescription("Quita el silencio a un usuario")
-    .addUserOption((o) => o.setName("usuario").setDescription("Usuario").setRequired(true))
+    .setDescription("Remove timeout from a user")
+    .addUserOption((o) => o.setName("user").setDescription("User to unmute").setRequired(true))
     .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
 
   new SlashCommandBuilder()
     .setName("warn")
-    .setDescription("Advierte a un usuario")
-    .addUserOption((o) => o.setName("usuario").setDescription("Usuario").setRequired(true))
-    .addStringOption((o) => o.setName("razon").setDescription("Razón").setRequired(true))
+    .setDescription("Warn a user")
+    .addUserOption((o) => o.setName("user").setDescription("User to warn").setRequired(true))
+    .addStringOption((o) => o.setName("reason").setDescription("Reason").setRequired(true))
     .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
 
   new SlashCommandBuilder()
     .setName("warnings")
-    .setDescription("Ver advertencias de un usuario")
-    .addUserOption((o) => o.setName("usuario").setDescription("Usuario").setRequired(true))
+    .setDescription("View warnings for a user")
+    .addUserOption((o) => o.setName("user").setDescription("User to check").setRequired(true))
     .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
 
   new SlashCommandBuilder()
     .setName("clear")
-    .setDescription("Elimina mensajes del canal")
+    .setDescription("Delete messages from the channel")
     .addIntegerOption((o) =>
-      o.setName("cantidad").setDescription("Cantidad (1-100)").setRequired(true).setMinValue(1).setMaxValue(100)
+      o.setName("amount").setDescription("Amount (1-100)").setRequired(true).setMinValue(1).setMaxValue(100)
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages),
 ];
 
 const handlers = {
   async kick(interaction) {
-    const member = interaction.options.getMember("usuario");
-    const reason = interaction.options.getString("razon") || "Sin razón";
-    if (!member.kickable) return interaction.reply({ content: "❌ No puedo expulsar a este usuario.", ephemeral: true });
+    const member = interaction.options.getMember("user");
+    const reason = interaction.options.getString("reason") || "No reason";
+    if (!member.kickable) return interaction.reply({ content: "Cannot kick this user.", ephemeral: true });
     await member.kick(reason);
-    const embed = new EmbedBuilder().setColor(0xfee75c).setTitle("👢 Usuario Expulsado")
-      .addFields({ name: "Usuario", value: member.user.tag, inline: true }, { name: "Moderador", value: interaction.user.tag, inline: true }, { name: "Razón", value: reason }).setTimestamp();
+    const embed = new EmbedBuilder().setColor(0xfee75c).setTitle("👢 User Kicked")
+      .addFields({ name: "User", value: member.user.tag, inline: true }, { name: "Moderator", value: interaction.user.tag, inline: true }, { name: "Reason", value: reason }).setTimestamp();
     return interaction.reply({ embeds: [embed] });
   },
 
   async ban(interaction) {
-    const member = interaction.options.getMember("usuario");
-    const reason = interaction.options.getString("razon") || "Sin razón";
-    if (!member.bannable) return interaction.reply({ content: "❌ No puedo banear a este usuario.", ephemeral: true });
+    const member = interaction.options.getMember("user");
+    const reason = interaction.options.getString("reason") || "No reason";
+    if (!member.bannable) return interaction.reply({ content: "Cannot ban this user.", ephemeral: true });
     await member.ban({ reason });
-    const embed = new EmbedBuilder().setColor(0xed4245).setTitle("🔨 Usuario Baneado")
-      .addFields({ name: "Usuario", value: member.user.tag, inline: true }, { name: "Moderador", value: interaction.user.tag, inline: true }, { name: "Razón", value: reason }).setTimestamp();
+    const embed = new EmbedBuilder().setColor(0xed4245).setTitle("🔨 User Banned")
+      .addFields({ name: "User", value: member.user.tag, inline: true }, { name: "Moderator", value: interaction.user.tag, inline: true }, { name: "Reason", value: reason }).setTimestamp();
     return interaction.reply({ embeds: [embed] });
   },
 
   async mute(interaction) {
-    const member = interaction.options.getMember("usuario");
-    const minutes = interaction.options.getInteger("minutos");
-    const reason = interaction.options.getString("razon") || "Sin razón";
-    if (!member.moderatable) return interaction.reply({ content: "❌ No puedo silenciar a este usuario.", ephemeral: true });
+    const member = interaction.options.getMember("user");
+    const minutes = interaction.options.getInteger("minutes");
+    const reason = interaction.options.getString("reason") || "No reason";
+    if (!member.moderatable) return interaction.reply({ content: "Cannot mute this user.", ephemeral: true });
     await member.timeout(minutes * 60 * 1000, reason);
-    const embed = new EmbedBuilder().setColor(0xf0b232).setTitle("🔇 Usuario Silenciado")
-      .addFields({ name: "Usuario", value: member.user.tag, inline: true }, { name: "Duración", value: `${minutes} min`, inline: true }, { name: "Razón", value: reason }).setTimestamp();
+    const embed = new EmbedBuilder().setColor(0xf0b232).setTitle("🔇 User Muted")
+      .addFields({ name: "User", value: member.user.tag, inline: true }, { name: "Duration", value: `${minutes} min`, inline: true }, { name: "Reason", value: reason }).setTimestamp();
     return interaction.reply({ embeds: [embed] });
   },
 
   async unmute(interaction) {
-    const member = interaction.options.getMember("usuario");
+    const member = interaction.options.getMember("user");
     await member.timeout(null);
-    return interaction.reply({ content: `✅ **${member.user.tag}** ya puede hablar.` });
+    return interaction.reply({ content: `**${member.user.tag}** has been unmuted.` });
   },
 
   async warn(interaction) {
-    const user = interaction.options.getUser("usuario");
-    const reason = interaction.options.getString("razon");
+    const user = interaction.options.getUser("user");
+    const reason = interaction.options.getString("reason");
     const key = `${interaction.guild.id}-${user.id}`;
     const list = warnings.get(key) || [];
     list.push({ reason, mod: interaction.user.tag, date: new Date().toISOString() });
     warnings.set(key, list);
-    const embed = new EmbedBuilder().setColor(0xffa500).setTitle("⚠️ Advertencia")
-      .addFields({ name: "Usuario", value: user.tag, inline: true }, { name: "Total", value: `${list.length}`, inline: true }, { name: "Razón", value: reason }).setTimestamp();
+    const embed = new EmbedBuilder().setColor(0xffa500).setTitle("⚠️ Warning")
+      .addFields({ name: "User", value: user.tag, inline: true }, { name: "Total", value: `${list.length}`, inline: true }, { name: "Reason", value: reason }).setTimestamp();
     return interaction.reply({ embeds: [embed] });
   },
 
   async warnings(interaction) {
-    const user = interaction.options.getUser("usuario");
+    const user = interaction.options.getUser("user");
     const key = `${interaction.guild.id}-${user.id}`;
     const list = warnings.get(key) || [];
-    if (!list.length) return interaction.reply({ content: `✅ **${user.tag}** no tiene advertencias.`, ephemeral: true });
-    const desc = list.map((w, i) => `**${i + 1}.** ${w.reason}\n   _por ${w.mod} — ${new Date(w.date).toLocaleDateString()}_`).join("\n\n");
-    const embed = new EmbedBuilder().setColor(0xffa500).setTitle(`📋 Advertencias de ${user.tag}`).setDescription(desc).setTimestamp();
+    if (!list.length) return interaction.reply({ content: `**${user.tag}** has no warnings.`, ephemeral: true });
+    const desc = list.map((w, i) => `**${i + 1}.** ${w.reason}\n   _by ${w.mod} — ${new Date(w.date).toLocaleDateString()}_`).join("\n\n");
+    const embed = new EmbedBuilder().setColor(0xffa500).setTitle(`Warnings for ${user.tag}`).setDescription(desc).setTimestamp();
     return interaction.reply({ embeds: [embed], ephemeral: true });
   },
 
   async clear(interaction) {
-    const amount = interaction.options.getInteger("cantidad");
+    const amount = interaction.options.getInteger("amount");
     const deleted = await interaction.channel.bulkDelete(amount, true);
-    return interaction.reply({ content: `🧹 Eliminados **${deleted.size}** mensajes.`, ephemeral: true });
+    return interaction.reply({ content: `Deleted **${deleted.size}** messages.`, ephemeral: true });
   },
 };
 

@@ -272,8 +272,11 @@
       <div class="nav-item" data-page="messages" onclick="showPage('messages')">
         <span class="icon">💬</span><span>Enviar Mensaje</span>
       </div>
+      <div class="nav-item" data-page="automod" onclick="showPage('automod')">
+        <span class="icon">🛡️</span><span>AutoMod</span>
+      </div>
       <div class="nav-item" data-page="warnings-page" onclick="showPage('warnings-page')">
-        <span class="icon">⚠️</span><span>Advertencias</span>
+        <span class="icon">⚠️</span><span>Warnings</span>
       </div>
       <div class="nav-item" data-page="verification" onclick="showPage('verification')">
         <span class="icon">🔐</span><span>Verificación</span>
@@ -338,6 +341,11 @@
       <!-- MESSAGES PAGE -->
       <div class="page" id="page-messages">
         <div id="messages-content"></div>
+      </div>
+
+      <!-- AUTOMOD PAGE -->
+      <div class="page" id="page-automod">
+        <div id="automod-content"></div>
       </div>
 
       <!-- WARNINGS PAGE -->
@@ -417,6 +425,7 @@
       if (page === 'server-info') renderServerInfo();
       if (page === 'announcements') renderAnnouncements();
       if (page === 'messages') renderMessages();
+      if (page === 'automod') renderAutomod();
       if (page === 'warnings-page') renderWarnings();
       if (page === 'verification') renderVerification();
       if (page === 'tickets') renderTickets();
@@ -480,7 +489,7 @@
       const activePage = document.querySelector('.page.active');
       if (activePage) {
         const pageId = activePage.id.replace('page-', '');
-        if (['server-info', 'announcements', 'messages', 'warnings-page', 'verification', 'tickets', 'ranks', 'wallets', 'setup-wizard'].includes(pageId)) {
+        if (['server-info', 'announcements', 'messages', 'automod', 'warnings-page', 'verification', 'tickets', 'ranks', 'wallets', 'setup-wizard'].includes(pageId)) {
           showPage(pageId);
         }
       }
@@ -731,6 +740,179 @@
         document.getElementById('msg-embed-footer-icon').value = '';
         updateEmbedPreview();
       } else { const err = await res.json(); toast(`Error: ${err.error}`, true); }
+    }
+
+    // ─── AutoMod Page ───
+    let automodConfig = null;
+
+    async function renderAutomod() {
+      const el = document.getElementById('automod-content');
+      if (!currentGuild) { el.innerHTML = noServerHtml('configure automod'); return; }
+      el.innerHTML = '<div class="page-header"><h2>🛡️ AutoMod</h2><p>Loading...</p></div>';
+
+      try {
+        const res = await fetch(`${API}/api/automod/${currentGuild}`);
+        automodConfig = await res.json();
+      } catch {
+        el.innerHTML = '<div class="card"><p style="color:var(--red)">Error loading automod config</p></div>';
+        return;
+      }
+
+      const c = automodConfig;
+      const logChOpts = '<option value="">None (disabled)</option>' + (currentGuildData?.channels?.filter(ch => ch.type === 0).map(ch => `<option value="${ch.id}" ${c.logChannelId === ch.id ? 'selected' : ''}>#${ch.name}</option>`).join('') || '');
+      const roleOpts = currentGuildData?.roles?.filter(r => r.name !== '@everyone').map(r => `<option value="${r.id}" ${(c.immuneRoleIds || []).includes(r.id) ? 'selected' : ''}>${r.name}</option>`).join('') || '';
+
+      function toggle(label, key, enabled) {
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-weight:600">${label}</span><label style="cursor:pointer"><input type="checkbox" id="am-${key}" ${enabled ? 'checked' : ''} onchange="updateAutomodField('${key}')"> Enabled</label></div>`;
+      }
+
+      el.innerHTML = `
+        <div class="page-header"><h2>🛡️ AutoMod — ${currentGuildData?.name || ''}</h2><p>Automated moderation with no human moderators needed</p></div>
+
+        <div class="card">
+          <h3>⚡ Master Switch</h3>
+          <div style="display:flex;align-items:center;gap:12px">
+            <label style="font-size:16px;cursor:pointer"><input type="checkbox" id="am-enabled" ${c.enabled ? 'checked' : ''} style="width:20px;height:20px"> <strong>AutoMod ${c.enabled ? 'ON' : 'OFF'}</strong></label>
+          </div>
+          <div class="form-grid" style="margin-top:12px">
+            <div class="form-group"><label>Log Channel</label><select id="am-log-channel">${logChOpts}</select></div>
+            <div class="form-group"><label>Immune Roles (bypass automod)</label><select id="am-immune-roles" multiple size="4" style="width:100%;padding:6px;background:var(--bg-primary);border:1px solid var(--border);border-radius:8px;color:var(--text-primary)">${roleOpts}</select></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>🚫 Spam Filter</h3>
+          ${toggle('Rate Limit & Duplicate Detection', 'spam', c.spamFilter?.enabled)}
+          <div class="form-grid" style="margin-top:10px">
+            <div class="form-group"><label>Max messages in window</label><input type="number" id="am-spam-max" value="${c.spamFilter?.maxMessages || 5}" min="2" max="20"></div>
+            <div class="form-group"><label>Time window (ms)</label><input type="number" id="am-spam-window" value="${c.spamFilter?.timeWindow || 5000}" min="1000" max="30000" step="1000"></div>
+            <div class="form-group"><label>Duplicate threshold</label><input type="number" id="am-spam-dupes" value="${c.spamFilter?.duplicateThreshold || 3}" min="2" max="10"></div>
+            <div class="form-group"><label>Mute duration (min)</label><input type="number" id="am-spam-mute" value="${c.spamFilter?.muteDuration || 10}" min="1" max="1440"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>🔤 Word Filter</h3>
+          ${toggle('Block blacklisted words/phrases', 'words', c.wordFilter?.enabled)}
+          <div class="form-group" style="margin-top:10px"><label>Blacklist (one per line)</label><textarea id="am-word-blacklist" rows="4" placeholder="badword1\nbadphrase two\netc">${(c.wordFilter?.blacklist || []).join('\n')}</textarea></div>
+        </div>
+
+        <div class="card">
+          <h3>🔗 Link Filter</h3>
+          ${toggle('Block links and Discord invites', 'links', c.linkFilter?.enabled)}
+          <div class="form-grid" style="margin-top:10px">
+            <div class="form-group"><label><input type="checkbox" id="am-link-invites" ${c.linkFilter?.blockInvites ? 'checked' : ''}> Block Discord invites</label></div>
+            <div class="form-group"><label><input type="checkbox" id="am-link-all" ${c.linkFilter?.blockAllLinks ? 'checked' : ''}> Block all links (except whitelist)</label></div>
+          </div>
+          <div class="form-group"><label>Whitelist domains (one per line)</label><textarea id="am-link-whitelist" rows="3" placeholder="youtube.com\ntwitter.com">${(c.linkFilter?.whitelist || []).join('\n')}</textarea></div>
+        </div>
+
+        <div class="card">
+          <h3>📢 Mention Spam</h3>
+          ${toggle('Block mass mentions', 'mentions', c.mentionSpam?.enabled)}
+          <div class="form-grid" style="margin-top:10px">
+            <div class="form-group"><label>Max mentions per message</label><input type="number" id="am-mention-max" value="${c.mentionSpam?.maxMentions || 5}" min="2" max="30"></div>
+            <div class="form-group"><label>Mute duration (min)</label><input type="number" id="am-mention-mute" value="${c.mentionSpam?.muteDuration || 5}" min="1" max="1440"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>🔠 Caps Filter</h3>
+          ${toggle('Block excessive CAPS', 'caps', c.capsFilter?.enabled)}
+          <div class="form-grid" style="margin-top:10px">
+            <div class="form-group"><label>Max caps percentage</label><input type="number" id="am-caps-pct" value="${c.capsFilter?.maxCapsPercent || 70}" min="50" max="100">%</div>
+            <div class="form-group"><label>Min message length to check</label><input type="number" id="am-caps-minlen" value="${c.capsFilter?.minLength || 10}" min="5" max="50"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>🛡️ Anti-Raid</h3>
+          ${toggle('Detect mass joins and lockdown', 'raid', c.antiRaid?.enabled)}
+          <div class="form-grid" style="margin-top:10px">
+            <div class="form-group"><label>Max joins to trigger</label><input type="number" id="am-raid-max" value="${c.antiRaid?.maxJoins || 10}" min="3" max="50"></div>
+            <div class="form-group"><label>Time window (seconds)</label><input type="number" id="am-raid-window" value="${c.antiRaid?.timeWindow || 30}" min="5" max="120"></div>
+            <div class="form-group"><label>Lockdown duration (seconds)</label><input type="number" id="am-raid-duration" value="${c.antiRaid?.lockdownDuration || 300}" min="30" max="3600"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>⚖️ Warning Escalation</h3>
+          ${toggle('Auto-action on warning accumulation', 'escalation', c.escalation?.enabled)}
+          <div id="am-thresholds" style="margin-top:10px">
+            ${(c.escalation?.thresholds || []).map((t, i) => `
+              <div class="form-grid" style="align-items:end;margin-bottom:6px">
+                <div class="form-group"><label>Warns</label><input type="number" id="am-esc-warns-${i}" value="${t.warns}" min="1" max="20"></div>
+                <div class="form-group"><label>Action</label><select id="am-esc-action-${i}"><option value="mute" ${t.action === 'mute' ? 'selected' : ''}>Mute</option><option value="kick" ${t.action === 'kick' ? 'selected' : ''}>Kick</option><option value="ban" ${t.action === 'ban' ? 'selected' : ''}>Ban</option></select></div>
+                <div class="form-group"><label>Duration (min, mute only)</label><input type="number" id="am-esc-dur-${i}" value="${t.duration || 0}" min="0"></div>
+              </div>`).join('')}
+          </div>
+        </div>
+
+        <div class="form-actions" style="margin-top:20px"><button class="btn btn-primary" onclick="saveAutomod()" style="font-size:16px;padding:12px 32px">💾 Save AutoMod Config</button></div>`;
+    }
+
+    async function saveAutomod() {
+      const config = {
+        enabled: document.getElementById('am-enabled').checked,
+        logChannelId: document.getElementById('am-log-channel').value || null,
+        immuneRoleIds: Array.from(document.getElementById('am-immune-roles').selectedOptions).map(o => o.value),
+        spamFilter: {
+          enabled: document.getElementById('am-spam')?.checked || false,
+          maxMessages: parseInt(document.getElementById('am-spam-max')?.value) || 5,
+          timeWindow: parseInt(document.getElementById('am-spam-window')?.value) || 5000,
+          duplicateThreshold: parseInt(document.getElementById('am-spam-dupes')?.value) || 3,
+          action: 'mute',
+          muteDuration: parseInt(document.getElementById('am-spam-mute')?.value) || 10,
+        },
+        wordFilter: {
+          enabled: document.getElementById('am-words')?.checked || false,
+          blacklist: (document.getElementById('am-word-blacklist')?.value || '').split('\n').map(w => w.trim()).filter(Boolean),
+          action: 'delete_warn',
+        },
+        linkFilter: {
+          enabled: document.getElementById('am-links')?.checked || false,
+          blockInvites: document.getElementById('am-link-invites')?.checked || false,
+          blockAllLinks: document.getElementById('am-link-all')?.checked || false,
+          whitelist: (document.getElementById('am-link-whitelist')?.value || '').split('\n').map(w => w.trim()).filter(Boolean),
+          action: 'delete_warn',
+        },
+        mentionSpam: {
+          enabled: document.getElementById('am-mentions')?.checked || false,
+          maxMentions: parseInt(document.getElementById('am-mention-max')?.value) || 5,
+          action: 'mute',
+          muteDuration: parseInt(document.getElementById('am-mention-mute')?.value) || 5,
+        },
+        capsFilter: {
+          enabled: document.getElementById('am-caps')?.checked || false,
+          maxCapsPercent: parseInt(document.getElementById('am-caps-pct')?.value) || 70,
+          minLength: parseInt(document.getElementById('am-caps-minlen')?.value) || 10,
+          action: 'delete',
+        },
+        antiRaid: {
+          enabled: document.getElementById('am-raid')?.checked || false,
+          maxJoins: parseInt(document.getElementById('am-raid-max')?.value) || 10,
+          timeWindow: parseInt(document.getElementById('am-raid-window')?.value) || 30,
+          action: 'lockdown',
+          lockdownDuration: parseInt(document.getElementById('am-raid-duration')?.value) || 300,
+        },
+        escalation: {
+          enabled: document.getElementById('am-escalation')?.checked || false,
+          thresholds: [0, 1, 2].map(i => ({
+            warns: parseInt(document.getElementById(`am-esc-warns-${i}`)?.value) || (i === 0 ? 3 : i === 1 ? 5 : 7),
+            action: document.getElementById(`am-esc-action-${i}`)?.value || 'mute',
+            duration: parseInt(document.getElementById(`am-esc-dur-${i}`)?.value) || 0,
+          })),
+        },
+      };
+      try {
+        const res = await fetch(`${API}/api/automod/${currentGuild}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(config)
+        });
+        if (res.ok) toast('AutoMod config saved!');
+        else toast('Error saving config', true);
+      } catch { toast('Error saving config', true); }
     }
 
     // ─── Warnings Page ───

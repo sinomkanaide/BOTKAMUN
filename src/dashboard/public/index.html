@@ -775,8 +775,8 @@
         <style>
           .am-tip { position:relative;cursor:help;font-size:14px;opacity:0.7;transition:opacity .2s }
           .am-tip:hover { opacity:1 }
-          .am-tip:hover::after { content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg-tertiary);color:var(--text-primary);padding:8px 12px;border-radius:8px;font-size:12px;white-space:normal;width:220px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.4);z-index:100;pointer-events:none;border:1px solid var(--border);font-weight:400 }
-          .am-tip:hover::before { content:'';position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--bg-tertiary);z-index:101 }
+          .am-tip:hover::after { content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#1a1a2e;color:#e8e8e8;padding:10px 14px;border-radius:8px;font-size:12.5px;line-height:1.5;white-space:normal;width:240px;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.7);z-index:100;pointer-events:none;border:1px solid #3a3a5c;font-weight:400 }
+          .am-tip:hover::before { content:'';position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:#1a1a2e;z-index:101 }
           .am-roles-list { max-height:160px;overflow-y:auto;padding:8px;background:var(--bg-primary);border:1px solid var(--border);border-radius:8px }
         </style>
         <div class="page-header"><h2>🛡️ AutoMod — ${currentGuildData?.name || ''}</h2><p>Automated moderation with no human moderators needed</p></div>

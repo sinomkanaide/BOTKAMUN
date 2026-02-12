@@ -353,6 +353,7 @@ module.exports = {
   setRanks,
   getClaimConfig,
   getApiConfig,
+  setApiConfig,
   getRankForLevel,
   ROLE_PERMISSIONS,
 };

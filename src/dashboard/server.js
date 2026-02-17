@@ -658,8 +658,27 @@ app.get("/api/automod/:guildId", requireAuth, (req, res) => {
 });
 
 app.put("/api/automod/:guildId", requireAuth, (req, res) => {
+  console.log(`[AutoMod:SAVE] Saving config for guild ${req.params.guildId} — enabled=${req.body?.enabled}`);
+  console.log(`[AutoMod:SAVE] Full config:`, JSON.stringify(req.body, null, 2));
   setAutomodConfig(req.params.guildId, req.body);
+  // Verify it was saved correctly
+  const saved = getAutomodConfig(req.params.guildId);
+  console.log(`[AutoMod:SAVE] Verify after save — enabled=${saved?.enabled}`);
   res.json({ success: true });
+});
+
+// Debug endpoint to check raw stored automod config
+app.get("/api/automod/:guildId/debug", requireAuth, (req, res) => {
+  const raw = settings.get(`automod-${req.params.guildId}`);
+  const resolved = getAutomodConfig(req.params.guildId);
+  res.json({
+    guildId: req.params.guildId,
+    rawStoredValue: raw,
+    resolvedConfig: resolved,
+    isRawNull: raw === null,
+    enabledValue: resolved?.enabled,
+    enabledType: typeof resolved?.enabled,
+  });
 });
 
 // ─── Settings ───

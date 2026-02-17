@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🔱 Verificación — Templo de los Rangos</title>
+  <title>Temple of Ranks — Wallet Verification</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -193,6 +193,57 @@
       margin-top: 2px;
     }
 
+    /* Wallet selector */
+    .wallet-selector {
+      display: none;
+      margin-top: 16px;
+    }
+
+    .wallet-selector label {
+      display: block;
+      font-family: 'Cinzel', serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gold);
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+    }
+
+    .wallet-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border: 1px solid rgba(212,168,67,0.15);
+      border-radius: 2px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: rgba(0,0,0,0.2);
+    }
+
+    .wallet-option:hover {
+      background: var(--bg-hover);
+      border-color: var(--gold);
+    }
+
+    .wallet-option.selected {
+      border-color: var(--gold);
+      background: rgba(212,168,67,0.08);
+    }
+
+    .wallet-option img {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+    }
+
+    .wallet-option span {
+      font-family: 'Cinzel', serif;
+      font-size: 14px;
+      color: var(--text);
+    }
+
     /* Button */
     .btn-connect {
       width: 100%;
@@ -240,6 +291,18 @@
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Warning box */
+    .wallet-warning {
+      margin-top: 12px;
+      padding: 10px 14px;
+      background: rgba(212,168,67,0.08);
+      border: 1px solid rgba(212,168,67,0.2);
+      border-radius: 2px;
+      font-size: 13px;
+      color: var(--sand);
+      line-height: 1.5;
+    }
 
     /* Result */
     .result {
@@ -336,37 +399,47 @@
         <div id="verify-flow">
           <div class="logo">
             <span class="logo-icon">🏛️</span>
-            <h1>Templo de los Rangos</h1>
-            <p>Demuestra tu valía ante los dioses</p>
+            <h1>Temple of Ranks</h1>
+            <p>Prove your worth before the gods</p>
           </div>
 
           <div class="steps">
             <div class="step active" id="step-1">
               <div class="step-number">I</div>
               <div class="step-text">
-                <h3>Conectar Wallet</h3>
-                <p>Vincula tu wallet con MetaMask</p>
+                <h3>Connect Wallet</h3>
+                <p>Link your game wallet</p>
               </div>
             </div>
             <div class="step dimmed" id="step-2">
               <div class="step-number">II</div>
               <div class="step-text">
-                <h3>Firmar Mensaje</h3>
-                <p>Verifica que eres el dueño</p>
+                <h3>Sign Message</h3>
+                <p>Verify that you are the owner</p>
               </div>
             </div>
             <div class="step dimmed" id="step-3">
               <div class="step-number">III</div>
               <div class="step-text">
-                <h3>Recibir tu Rango</h3>
-                <p>El oráculo determina tu posición</p>
+                <h3>Receive your Rank</h3>
+                <p>The oracle determines your position</p>
               </div>
             </div>
           </div>
 
+          <!-- Wallet selector (shown when multiple wallets detected) -->
+          <div class="wallet-selector" id="wallet-selector">
+            <label>Select your wallet:</label>
+            <div id="wallet-options"></div>
+          </div>
+
           <button class="btn-connect" id="btn-main" onclick="startVerification()">
-            🦊 Conectar MetaMask
+            Connect your game wallet
           </button>
+
+          <div class="wallet-warning">
+            &#9888;&#65039; Make sure to connect the wallet linked to your game account. This cannot be changed later.
+          </div>
 
           <div class="error-box" id="error-box"></div>
         </div>
@@ -374,7 +447,7 @@
         <!-- Success result -->
         <div class="result success" id="result-success">
           <div class="result-icon">🔱</div>
-          <div class="result-title">¡Los Dioses te han Reconocido!</div>
+          <div class="result-title">The Gods Have Recognized You!</div>
           <div class="rank-badge" id="result-rank"></div>
           <div class="result-desc" id="result-message"></div>
           <div class="wallet-display" id="result-wallet"></div>
@@ -382,16 +455,16 @@
 
         <!-- Error result -->
         <div class="result error" id="result-error">
-          <div class="result-icon">⚠️</div>
-          <div class="result-title" id="error-title">Error en la Verificación</div>
+          <div class="result-icon">&#9888;&#65039;</div>
+          <div class="result-title" id="error-title">Verification Error</div>
           <div class="result-desc" id="error-message"></div>
         </div>
 
         <!-- Expired -->
         <div class="expired" id="expired-view" style="display:none">
-          <div class="expired-icon">⏳</div>
-          <h2>Enlace Expirado</h2>
-          <p>Regresa a Discord y genera un nuevo enlace haciendo clic en "Claim tu Rango"</p>
+          <div class="expired-icon">&#9203;</div>
+          <h2>Link Expired</h2>
+          <p>Go back to Discord and generate a new link by clicking "Claim Your Rank"</p>
         </div>
 
       </div>
@@ -404,9 +477,10 @@
     const TOKEN = pathParts[pathParts.length - 1];
 
     let walletAddress = null;
+    let selectedProvider = null;
 
     // Generate floating hieroglyphs
-    const hieroglyphs = ['𓀀','𓁀','𓂀','𓃀','𓄀','𓅀','𓆀','𓇀','𓈀','𓉀','𓊀','𓋀','𓌀','𓍀','𓎀','𓏀','𓐀','☥','𓂋','𓅃','𓆣','𓇳','𓊝','𓋹'];
+    const hieroglyphs = ['\u{13000}','\u{13040}','\u{13080}','\u{130C0}','\u{13100}','\u{13140}','\u{13180}','\u{131C0}','\u{13200}','\u{13240}','\u{13280}','\u{132C0}','\u{13300}','\u{13340}','\u{13380}','\u{133C0}','\u{13400}','\u2625','\u{1308B}','\u{13143}','\u{131A3}','\u{131F3}','\u{1329D}','\u{132F9}'];
     const container = document.getElementById('hieroglyphs');
     for (let i = 0; i < 20; i++) {
       const el = document.createElement('span');
@@ -449,36 +523,135 @@
       const box = document.getElementById('error-box');
       box.textContent = msg;
       box.style.display = 'block';
-      setTimeout(() => box.style.display = 'none', 5000);
+      setTimeout(() => box.style.display = 'none', 8000);
+    }
+
+    // ─── Multi-wallet detection ───
+    function detectWallets() {
+      const wallets = [];
+
+      // Check for EIP-6963 multiple providers
+      if (window.ethereum?.providers && Array.isArray(window.ethereum.providers)) {
+        for (const provider of window.ethereum.providers) {
+          if (provider.isMetaMask) {
+            wallets.push({ name: 'MetaMask', provider, icon: 'https://raw.githubusercontent.com/nicedoc/brandcolors/refs/heads/master/slugs/m/metamask/metamask.svg' });
+          } else if (provider.isCoinbaseWallet) {
+            wallets.push({ name: 'Coinbase Wallet', provider, icon: 'https://altcoinsbox.com/wp-content/uploads/2022/12/coinbase-logo-300x300.webp' });
+          } else if (provider.isBraveWallet) {
+            wallets.push({ name: 'Brave Wallet', provider, icon: 'https://brave.com/static-assets/images/brave-logo-sans-text.svg' });
+          } else if (!provider.isPhantom) {
+            // Generic EVM wallet (not Phantom Solana)
+            wallets.push({ name: 'EVM Wallet', provider, icon: '' });
+          }
+        }
+      }
+
+      // Single provider (no providers array)
+      if (wallets.length === 0 && window.ethereum) {
+        // Check if it's Phantom's Solana-only injection
+        if (window.ethereum.isPhantom && !window.ethereum.isMetaMask) {
+          // Phantom injects ethereum but it might be EVM-compatible or Solana-only
+          // If it has request method, it supports EVM
+          if (typeof window.ethereum.request === 'function') {
+            wallets.push({ name: 'Phantom (EVM)', provider: window.ethereum, icon: 'https://phantom.com/img/phantom-logo.svg' });
+          }
+        } else if (window.ethereum.isMetaMask) {
+          wallets.push({ name: 'MetaMask', provider: window.ethereum, icon: 'https://raw.githubusercontent.com/nicedoc/brandcolors/refs/heads/master/slugs/m/metamask/metamask.svg' });
+        } else if (window.ethereum.isCoinbaseWallet) {
+          wallets.push({ name: 'Coinbase Wallet', provider: window.ethereum, icon: 'https://altcoinsbox.com/wp-content/uploads/2022/12/coinbase-logo-300x300.webp' });
+        } else {
+          wallets.push({ name: 'Browser Wallet', provider: window.ethereum, icon: '' });
+        }
+      }
+
+      return wallets;
+    }
+
+    function checkOnlyPhantomSolana() {
+      // Phantom Solana-only: has window.solana but no window.ethereum, or ethereum is phantom without EVM
+      if (!window.ethereum && window.solana?.isPhantom) return true;
+      return false;
     }
 
     async function startVerification() {
       const btn = document.getElementById('btn-main');
 
-      // Check MetaMask
-      if (!window.ethereum) {
-        showError('MetaMask no detectado. Instala MetaMask para continuar.');
+      // Check for Phantom Solana-only
+      if (checkOnlyPhantomSolana()) {
+        showError('This verification requires an EVM wallet (MetaMask, Coinbase Wallet, etc.). Phantom Solana wallets are not compatible.');
         return;
       }
 
+      // Check if any wallet is available
+      if (!window.ethereum) {
+        showError('No EVM wallet detected. Please install MetaMask or another EVM-compatible wallet.');
+        return;
+      }
+
+      const wallets = detectWallets();
+
+      // If multiple wallets, show selector
+      if (wallets.length > 1) {
+        const selectorDiv = document.getElementById('wallet-selector');
+        const optionsDiv = document.getElementById('wallet-options');
+        optionsDiv.innerHTML = '';
+
+        wallets.forEach((w, i) => {
+          const opt = document.createElement('div');
+          opt.className = 'wallet-option';
+          opt.innerHTML = `${w.icon ? `<img src="${w.icon}" alt="${w.name}">` : ''}<span>${w.name}</span>`;
+          opt.onclick = () => {
+            document.querySelectorAll('.wallet-option').forEach(el => el.classList.remove('selected'));
+            opt.classList.add('selected');
+            selectedProvider = w.provider;
+          };
+          if (i === 0) {
+            opt.classList.add('selected');
+            selectedProvider = w.provider;
+          }
+          optionsDiv.appendChild(opt);
+        });
+
+        selectorDiv.style.display = 'block';
+        btn.textContent = 'Connect selected wallet';
+        btn.onclick = connectSelectedWallet;
+        return;
+      }
+
+      // Single wallet — connect directly
+      selectedProvider = wallets.length === 1 ? wallets[0].provider : window.ethereum;
+      await connectWallet();
+    }
+
+    async function connectSelectedWallet() {
+      if (!selectedProvider) {
+        showError('Please select a wallet first.');
+        return;
+      }
+      await connectWallet();
+    }
+
+    async function connectWallet() {
+      const btn = document.getElementById('btn-main');
+
       try {
-        // Step 1: Connect wallet
         btn.classList.add('loading');
         btn.disabled = true;
 
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const accounts = await selectedProvider.request({ method: 'eth_requestAccounts' });
         walletAddress = accounts[0];
 
         setStep(2);
         btn.classList.remove('loading');
-        btn.textContent = '✍️ Firmar Mensaje';
+        btn.textContent = 'Sign Message';
         btn.disabled = false;
         btn.onclick = signMessage;
+        document.getElementById('wallet-selector').style.display = 'none';
 
       } catch (err) {
         btn.classList.remove('loading');
         btn.disabled = false;
-        showError('Conexión rechazada. Intenta de nuevo.');
+        showError('Connection rejected. Please try again.');
       }
     }
 
@@ -488,17 +661,17 @@
       btn.disabled = true;
 
       try {
-        // Create message to sign
-        const message = `Verificar wallet para Discord\n\nWallet: ${walletAddress}\nToken: ${TOKEN}\nTimestamp: ${Date.now()}`;
+        // Create message to sign (English + Base network info)
+        const message = `Verify wallet for Tapkamun Discord\n\nWallet: ${walletAddress}\nNetwork: Base (Coinbase L2)\nToken: ${TOKEN}\nTimestamp: ${Date.now()}`;
 
         // Request signature
-        const signature = await window.ethereum.request({
+        const signature = await selectedProvider.request({
           method: 'personal_sign',
           params: [message, walletAddress],
         });
 
         setStep(3);
-        btn.textContent = '🔱 Consultando al Oráculo...';
+        btn.textContent = 'Consulting the Oracle...';
 
         // Send to backend
         const res = await fetch('/api/claim/verify', {
@@ -518,9 +691,9 @@
           // Show success
           document.getElementById('verify-flow').style.display = 'none';
           document.getElementById('result-success').style.display = 'block';
-          document.getElementById('result-rank').textContent = result.rankName || 'Rango Asignado';
+          document.getElementById('result-rank').textContent = result.rankName || 'Rank Assigned';
           document.getElementById('result-message').textContent =
-            result.message || `Nivel ${result.level} verificado. Tu rango ha sido actualizado en Discord.`;
+            result.message || `Level ${result.level} verified. Your rank has been updated in Discord.`;
           document.getElementById('result-wallet').textContent =
             walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4);
         } else {
@@ -529,15 +702,15 @@
           document.getElementById('result-error').style.display = 'block';
           document.getElementById('error-title').textContent = result.error || 'Error';
           document.getElementById('error-message').textContent =
-            result.details || 'No se pudo verificar tu wallet. Intenta de nuevo desde Discord.';
+            result.details || 'Could not verify your wallet. Please try again from Discord.';
         }
 
       } catch (err) {
         btn.classList.remove('loading');
         btn.disabled = false;
-        btn.textContent = '✍️ Firmar Mensaje';
+        btn.textContent = 'Sign Message';
         btn.onclick = signMessage;
-        showError('Firma rechazada o error de red. Intenta de nuevo.');
+        showError('Signature rejected or network error. Please try again.');
       }
     }
   </script>

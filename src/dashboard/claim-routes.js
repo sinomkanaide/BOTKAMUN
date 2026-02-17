@@ -20,91 +20,122 @@ function registerClaimRoutes(app, getClient) {
     const { token, wallet, signature, message } = req.body;
     const client = getClient();
 
+    console.log(`[CLAIM] Verification request — wallet: ${wallet}, token: ${token?.slice(0, 8)}...`);
+
     if (!client) {
-      return res.status(500).json({ success: false, error: "Bot no conectado" });
+      return res.status(500).json({ success: false, error: "Bot not connected" });
     }
 
     // 1. Validate token
     const claimData = getClaimData(token);
     if (!claimData) {
+      console.log(`[CLAIM] Token invalid or expired: ${token?.slice(0, 8)}...`);
       return res.json({
         success: false,
-        error: "Enlace expirado",
-        details: "Regresa a Discord y genera un nuevo enlace.",
+        error: "Link expired",
+        details: "Go back to Discord and generate a new link.",
       });
     }
+
+    console.log(`[CLAIM] Token valid — userId: ${claimData.userId}, guildId: ${claimData.guildId}`);
 
     // 2. Verify wallet signature
     try {
       const recoveredAddress = ethers.verifyMessage(message, signature);
 
       if (recoveredAddress.toLowerCase() !== wallet.toLowerCase()) {
+        console.log(`[CLAIM] Signature mismatch — recovered: ${recoveredAddress}, provided: ${wallet}`);
         return res.json({
           success: false,
-          error: "Firma inválida",
-          details: "La firma no corresponde a la wallet proporcionada.",
+          error: "Invalid signature",
+          details: "The signature does not match the provided wallet.",
         });
       }
+      console.log(`[CLAIM] Signature verified — wallet: ${wallet}`);
     } catch (err) {
+      console.error(`[CLAIM] Signature verification error:`, err.message);
       return res.json({
         success: false,
-        error: "Error de verificación",
-        details: "No se pudo verificar la firma. Intenta de nuevo.",
+        error: "Verification error",
+        details: "Could not verify the signature. Please try again.",
       });
     }
 
     // 3. Get API config
     const apiConfig = getApiConfig(claimData.guildId);
     if (!apiConfig) {
+      console.log(`[CLAIM] No API config for guild ${claimData.guildId}`);
       return res.json({
         success: false,
-        error: "API no configurada",
-        details: "El servidor no tiene configurada la API del juego.",
+        error: "API not configured",
+        details: "The server has not configured the game API.",
       });
     }
 
     // 4. Query game API for player level
     let playerLevel = 0;
     try {
-      const endpoint = apiConfig.endpoint.replace("{wallet}", wallet);
+      // Try both original and lowercase wallet
+      const walletLower = wallet.toLowerCase();
+      const endpoint = apiConfig.endpoint.replace("{wallet}", walletLower);
       const url = `${apiConfig.baseUrl}${endpoint}`;
 
-      const headers = { "Content-Type": "application/json" };
+      const headers = {};
       if (apiConfig.apiKey) {
         headers["Authorization"] = `Bearer ${apiConfig.apiKey}`;
         headers["X-API-Key"] = apiConfig.apiKey;
       }
 
+      console.log(`[CLAIM] Calling game API: ${url}`);
+      console.log(`[CLAIM] Headers: ${JSON.stringify(headers)}`);
+
       const apiRes = await fetch(url, { headers });
+
+      console.log(`[CLAIM] API Response status: ${apiRes.status}`);
+      const responseText = await apiRes.text();
+      console.log(`[CLAIM] API Response body: ${responseText}`);
 
       if (!apiRes.ok) {
         return res.json({
           success: false,
-          error: "Wallet no encontrada",
-          details: `No se encontró un jugador con esta wallet. (HTTP ${apiRes.status})`,
+          error: "Could not verify wallet",
+          details: `Could not verify your wallet. This may mean your wallet is not registered in the game. Make sure you're using the same wallet linked to your Tapkamun account. (HTTP ${apiRes.status})`,
         });
       }
 
-      const apiData = await apiRes.json();
+      // Parse the response text as JSON
+      let apiData;
+      try {
+        apiData = JSON.parse(responseText);
+      } catch {
+        console.error(`[CLAIM] Failed to parse API response as JSON`);
+        return res.json({
+          success: false,
+          error: "API error",
+          details: "The game API returned an invalid response.",
+        });
+      }
 
       // Extract level from nested field (supports "level", "data.level", etc.)
       playerLevel = apiConfig.levelField.split(".").reduce((obj, key) => obj?.[key], apiData);
 
       if (playerLevel === undefined || playerLevel === null) {
+        console.log(`[CLAIM] Level field "${apiConfig.levelField}" not found in response: ${responseText.slice(0, 200)}`);
         return res.json({
           success: false,
-          error: "Nivel no encontrado",
-          details: `La API respondió pero no se encontró el campo "${apiConfig.levelField}".`,
+          error: "Level not found",
+          details: `The API responded but the field "${apiConfig.levelField}" was not found in the response.`,
         });
       }
 
       playerLevel = parseInt(playerLevel, 10);
+      console.log(`[CLAIM] Player level: ${playerLevel}`);
     } catch (err) {
-      console.error("Error calling game API:", err);
+      console.error("[CLAIM] Error calling game API:", err);
       return res.json({
         success: false,
-        error: "Error de API",
-        details: "No se pudo conectar con la API del juego. Intenta más tarde.",
+        error: "API error",
+        details: "Could not connect to the game API. Please try again later.",
       });
     }
 
@@ -113,12 +144,16 @@ function registerClaimRoutes(app, getClient) {
     const rank = getRankForLevel(ranks, playerLevel);
 
     if (!rank) {
+      const minLevel = ranks.filter(r => r.level > 0).sort((a,b) => a.level - b.level)[0]?.level || '?';
+      console.log(`[CLAIM] Level ${playerLevel} insufficient — minimum required: ${minLevel}`);
       return res.json({
         success: false,
-        error: "Nivel insuficiente",
-        details: `Tu nivel actual es ${playerLevel}. Necesitas al menos nivel ${ranks.filter(r => r.level > 0).sort((a,b) => a.level - b.level)[0]?.level || '?'} para obtener un rango.`,
+        error: "Insufficient level",
+        details: `Your current level is ${playerLevel}. You need at least level ${minLevel} to claim a rank.`,
       });
     }
+
+    console.log(`[CLAIM] Rank determined: ${rank.name} (level ${rank.level})`);
 
     // 6. Assign role in Discord
     try {
@@ -136,6 +171,7 @@ function registerClaimRoutes(app, getClient) {
           hoist: true,
           reason: "Auto-created by rank claim system",
         });
+        console.log(`[CLAIM] Created role: ${rank.name}`);
       }
 
       // Remove previous Egyptian rank roles
@@ -143,10 +179,12 @@ function registerClaimRoutes(app, getClient) {
       const rolesToRemove = member.roles.cache.filter((r) => allRankNames.includes(r.name));
       if (rolesToRemove.size > 0) {
         await member.roles.remove(rolesToRemove);
+        console.log(`[CLAIM] Removed old rank roles: ${rolesToRemove.map(r => r.name).join(', ')}`);
       }
 
       // Add new role
       await member.roles.add(discordRole);
+      console.log(`[CLAIM] Assigned role ${rank.name} to ${member.user.tag}`);
 
       // Also make sure they have citizen role (verified)
       const citizenRank = ranks.find((r) => r.level === -1);
@@ -163,6 +201,7 @@ function registerClaimRoutes(app, getClient) {
         const slaveRole = guild.roles.cache.find((r) => r.name === slaveRank.name);
         if (slaveRole && member.roles.cache.has(slaveRole.id)) {
           await member.roles.remove(slaveRole);
+          console.log(`[CLAIM] Removed Slave role from ${member.user.tag}`);
         }
       }
 
@@ -177,19 +216,21 @@ function registerClaimRoutes(app, getClient) {
       // Consume the token
       consumeClaim(token);
 
+      console.log(`[CLAIM] SUCCESS — ${member.user.tag} got ${rank.name} (level ${playerLevel})`);
+
       return res.json({
         success: true,
         rankName: rank.name,
         level: playerLevel,
-        message: `Nivel ${playerLevel} verificado. Se te ha asignado el rango ${rank.name} en Discord.`,
+        message: `Level ${playerLevel} verified. You have been assigned the rank ${rank.name} in Discord.`,
       });
 
     } catch (err) {
-      console.error("Error assigning role:", err);
+      console.error("[CLAIM] Error assigning role:", err);
       return res.json({
         success: false,
-        error: "Error de Discord",
-        details: "No se pudo asignar el rol. Verifica que el bot tenga permisos suficientes.",
+        error: "Discord error",
+        details: "Could not assign the role. Please verify the bot has sufficient permissions.",
       });
     }
   });
@@ -204,7 +245,7 @@ function registerClaimRoutes(app, getClient) {
 
   app.put("/api/ranks/:guildId", requireAuth, (req, res) => {
     const { ranks } = req.body;
-    if (!Array.isArray(ranks)) return res.status(400).json({ error: "ranks debe ser un array" });
+    if (!Array.isArray(ranks)) return res.status(400).json({ error: "ranks must be an array" });
     setRanks(req.params.guildId, ranks);
     res.json({ success: true, ranks });
   });
@@ -255,17 +296,21 @@ function registerClaimRoutes(app, getClient) {
     if (!config || !config.baseUrl || !config.endpoint) {
       return res.status(400).json({ error: "Save the API config first" });
     }
-    const testWallet = req.body.wallet || "0x0000000000000000000000000000000000000000";
+    const testWallet = (req.body.wallet || "0x0000000000000000000000000000000000000000").toLowerCase();
     const url = `${config.baseUrl}${config.endpoint.replace("{wallet}", testWallet)}`;
     try {
-      const headers = { "Content-Type": "application/json" };
+      const headers = {};
       if (config.apiKey) {
         headers["Authorization"] = `Bearer ${config.apiKey}`;
         headers["X-API-Key"] = config.apiKey;
       }
+      console.log(`[CLAIM:TEST] Testing API: ${url}`);
       const apiRes = await fetch(url, { headers });
-      const data = await apiRes.json();
-      const level = config.levelField.split(".").reduce((obj, key) => obj?.[key], data);
+      const text = await apiRes.text();
+      console.log(`[CLAIM:TEST] Response: ${apiRes.status} — ${text.slice(0, 500)}`);
+      let data;
+      try { data = JSON.parse(text); } catch { data = text; }
+      const level = typeof data === 'object' ? config.levelField.split(".").reduce((obj, key) => obj?.[key], data) : null;
       res.json({ status: apiRes.status, url, data, levelField: config.levelField, levelValue: level !== undefined ? level : null });
     } catch (err) {
       res.status(502).json({ error: err.message, url });

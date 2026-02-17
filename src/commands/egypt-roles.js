@@ -150,7 +150,7 @@ const handlers = {
         `4. The oracle will check your level and assign your rank\n\n` +
         `_Only the true owner of the wallet can claim their rank._`
       )
-      .setImage("https://i.imgur.com/8QjGqXj.png")
+      .setThumbnail("https://teal-delicate-halibut-560.mypinata.cloud/ipfs/bafybeid6hn6gpf2s2bzteyniwy5gwc3jb7g5qsqquidnnf62dusbumbzfm")
       .setFooter({ text: "⚡ Wallet verification system" })
       .setTimestamp();
 

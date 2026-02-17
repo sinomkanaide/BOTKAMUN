@@ -41,15 +41,11 @@ function consumeClaim(token) {
 }
 
 // Get base URL for the verification page
+// BASE_URL takes priority (custom domain like https://verify.tapkamun.fun)
 function getBaseUrl() {
-  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
-    return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
-  }
-  if (process.env.BASE_URL) {
-    return process.env.BASE_URL;
-  }
-  const port = process.env.PORT || 3000;
-  return `http://localhost:${port}`;
+  if (process.env.BASE_URL) return process.env.BASE_URL;
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
+  return `http://localhost:${process.env.PORT || 3000}`;
 }
 
 async function handleButton(interaction, client) {

@@ -5,7 +5,7 @@ const { settings, warnings } = require("../utils/database");
 const messageTracker = new Map(); // guildId-userId → [timestamps]
 const duplicateTracker = new Map(); // guildId-userId → [messageContents]
 const joinTracker = new Map(); // guildId → [timestamps]
-const lockdownGuilds = new Set(); // guilds currently in lockdown
+const lockdownGuilds = new Map(); // guildId → { originalPermissions } (saved before lockdown)
 
 // ─── Default config ───
 const DEFAULT_AUTOMOD = {
@@ -42,10 +42,10 @@ const DEFAULT_AUTOMOD = {
     enabled: true,
     maxCapsPercent: 70,
     minLength: 10,
-    action: "delete",
+    action: "delete_warn",
   },
   antiRaid: {
-    enabled: true,
+    enabled: false,
     maxJoins: 10,
     timeWindow: 30,
     action: "lockdown",
@@ -75,7 +75,9 @@ async function modLog(guild, config, embed) {
   try {
     const channel = guild.channels.cache.get(config.logChannelId);
     if (channel) await channel.send({ embeds: [embed] });
-  } catch {}
+  } catch (err) {
+    console.error("[AutoMod] Failed to send mod log:", err.message);
+  }
 }
 
 function logEmbed(title, description, color = 0xffa500) {
@@ -87,6 +89,8 @@ function logEmbed(title, description, color = 0xffa500) {
 }
 
 // ─── Check if user is immune ───
+// NOTE: Admins and ManageGuild users are ALWAYS immune.
+// To test AutoMod, use an account WITHOUT these permissions.
 function isImmune(member, config) {
   if (member.permissions.has(PermissionFlagsBits.Administrator)) return true;
   if (member.permissions.has(PermissionFlagsBits.ManageGuild)) return true;
@@ -102,6 +106,7 @@ async function addWarnAndEscalate(member, guild, config, reason) {
   const list = warnings.get(key) || [];
   list.push({ reason, mod: "AutoMod", date: new Date().toISOString() });
   warnings.set(key, list);
+  console.log(`[AutoMod] Warning added to ${member.user.tag} (${list.length} total): ${reason}`);
 
   if (!config.escalation?.enabled) return;
 
@@ -113,12 +118,14 @@ async function addWarnAndEscalate(member, guild, config, reason) {
   try {
     if (threshold.action === "mute" && member.moderatable) {
       await member.timeout((threshold.duration || 60) * 60 * 1000, `AutoMod: ${count} warnings`);
+      console.log(`[AutoMod] Escalation: Muted ${member.user.tag} (${count} warns)`);
       await modLog(guild, config, logEmbed(
         "🔇 Auto-Mute (Escalation)",
         `**${member.user.tag}** muted for ${threshold.duration || 60}min\n**Warnings:** ${count}\n**Threshold:** ${threshold.warns}+ warns`,
         0xf0b232
       ));
     } else if (threshold.action === "kick" && member.kickable) {
+      console.log(`[AutoMod] Escalation: Kicking ${member.user.tag} (${count} warns)`);
       await modLog(guild, config, logEmbed(
         "👢 Auto-Kick (Escalation)",
         `**${member.user.tag}** kicked\n**Warnings:** ${count}\n**Threshold:** ${threshold.warns}+ warns`,
@@ -126,6 +133,7 @@ async function addWarnAndEscalate(member, guild, config, reason) {
       ));
       await member.kick(`AutoMod: ${count} warnings`);
     } else if (threshold.action === "ban" && member.bannable) {
+      console.log(`[AutoMod] Escalation: Banning ${member.user.tag} (${count} warns)`);
       await modLog(guild, config, logEmbed(
         "🔨 Auto-Ban (Escalation)",
         `**${member.user.tag}** banned\n**Warnings:** ${count}\n**Threshold:** ${threshold.warns}+ warns`,
@@ -134,7 +142,7 @@ async function addWarnAndEscalate(member, guild, config, reason) {
       await member.ban({ reason: `AutoMod: ${count} warnings` });
     }
   } catch (err) {
-    console.error("AutoMod escalation error:", err);
+    console.error(`[AutoMod] Escalation error for ${member.user.tag}:`, err.message);
   }
 }
 
@@ -250,15 +258,23 @@ async function handleMessage(message, client) {
   if (!config.enabled) return;
 
   const member = message.member;
-  if (!member || isImmune(member, config)) return;
+  if (!member) return;
+
+  if (isImmune(member, config)) {
+    // Don't log every immune message to avoid spam, but this is where
+    // admin messages get skipped. Test with a non-admin account.
+    return;
+  }
 
   // ─── Spam Filter ───
   const spamResult = checkSpam(message, config);
   if (spamResult) {
     try {
       await message.delete();
+      console.log(`[AutoMod] Spam(${spamResult}) — deleted message from ${member.user.tag} in #${message.channel.name}`);
       if (config.spamFilter.action === "mute" && member.moderatable) {
         await member.timeout((config.spamFilter.muteDuration || 10) * 60 * 1000, `AutoMod: Spam (${spamResult})`);
+        console.log(`[AutoMod] Muted ${member.user.tag} for ${config.spamFilter.muteDuration || 10}min (spam)`);
       }
       await addWarnAndEscalate(member, message.guild, config, `Spam detected (${spamResult})`);
       await modLog(message.guild, config, logEmbed(
@@ -266,7 +282,9 @@ async function handleMessage(message, client) {
         `**User:** ${member.user.tag}\n**Type:** ${spamResult}\n**Channel:** <#${message.channel.id}>`,
         0xed4245
       ));
-    } catch {}
+    } catch (err) {
+      console.error(`[AutoMod] Spam handler error for ${member.user.tag}:`, err.message);
+    }
     return;
   }
 
@@ -274,6 +292,7 @@ async function handleMessage(message, client) {
   if (checkWords(message, config)) {
     try {
       await message.delete();
+      console.log(`[AutoMod] WordFilter — deleted message from ${member.user.tag} in #${message.channel.name}: "${message.content.slice(0, 50)}"`);
       if (config.wordFilter.action === "delete_warn") {
         await addWarnAndEscalate(member, message.guild, config, "Blocked word/phrase");
       }
@@ -282,7 +301,9 @@ async function handleMessage(message, client) {
         `**User:** ${member.user.tag}\n**Channel:** <#${message.channel.id}>\n**Content:** ||${message.content.slice(0, 100)}||`,
         0xffa500
       ));
-    } catch {}
+    } catch (err) {
+      console.error(`[AutoMod] Word filter error for ${member.user.tag}:`, err.message);
+    }
     return;
   }
 
@@ -291,6 +312,7 @@ async function handleMessage(message, client) {
   if (linkResult) {
     try {
       await message.delete();
+      console.log(`[AutoMod] LinkFilter(${linkResult}) — deleted message from ${member.user.tag} in #${message.channel.name}`);
       if (config.linkFilter.action === "delete_warn") {
         await addWarnAndEscalate(member, message.guild, config, `Blocked link (${linkResult})`);
       }
@@ -299,7 +321,9 @@ async function handleMessage(message, client) {
         `**User:** ${member.user.tag}\n**Type:** ${linkResult}\n**Channel:** <#${message.channel.id}>`,
         0xffa500
       ));
-    } catch {}
+    } catch (err) {
+      console.error(`[AutoMod] Link filter error for ${member.user.tag}:`, err.message);
+    }
     return;
   }
 
@@ -307,8 +331,10 @@ async function handleMessage(message, client) {
   if (checkMentions(message, config)) {
     try {
       await message.delete();
+      console.log(`[AutoMod] MentionSpam — deleted message from ${member.user.tag} (${message.mentions.users.size + message.mentions.roles.size} mentions)`);
       if (member.moderatable) {
         await member.timeout((config.mentionSpam.muteDuration || 5) * 60 * 1000, "AutoMod: Mention spam");
+        console.log(`[AutoMod] Muted ${member.user.tag} for ${config.mentionSpam.muteDuration || 5}min (mention spam)`);
       }
       await addWarnAndEscalate(member, message.guild, config, "Mention spam");
       await modLog(message.guild, config, logEmbed(
@@ -316,7 +342,9 @@ async function handleMessage(message, client) {
         `**User:** ${member.user.tag}\n**Mentions:** ${message.mentions.users.size + message.mentions.roles.size}\n**Channel:** <#${message.channel.id}>`,
         0xf0b232
       ));
-    } catch {}
+    } catch (err) {
+      console.error(`[AutoMod] Mention spam error for ${member.user.tag}:`, err.message);
+    }
     return;
   }
 
@@ -324,6 +352,7 @@ async function handleMessage(message, client) {
   if (checkCaps(message, config)) {
     try {
       await message.delete();
+      console.log(`[AutoMod] CapsFilter — deleted message from ${member.user.tag} in #${message.channel.name}`);
       if (config.capsFilter.action === "delete_warn") {
         await addWarnAndEscalate(member, message.guild, config, "Excessive caps");
       }
@@ -332,24 +361,33 @@ async function handleMessage(message, client) {
         `**User:** ${member.user.tag}\n**Channel:** <#${message.channel.id}>`,
         0xf0b232
       ));
-    } catch {}
+    } catch (err) {
+      console.error(`[AutoMod] Caps filter error for ${member.user.tag}:`, err.message);
+    }
     return;
   }
 }
 
 // ─── Raid detection on member join ───
+// SAFE: Saves @everyone permissions before lockdown, restores exactly on unlock.
+// Does NOT touch individual channel overwrites.
 async function handleMemberJoin(member, client) {
   const config = getAutomodConfig(member.guild.id);
   if (!config.enabled) return;
 
   if (checkRaid(member.guild, config)) {
     if (lockdownGuilds.has(member.guild.id)) return;
-    lockdownGuilds.add(member.guild.id);
 
     try {
-      // Lockdown: deny @everyone send messages
       const everyone = member.guild.roles.everyone;
-      await everyone.setPermissions(everyone.permissions.remove(PermissionFlagsBits.SendMessages), "AutoMod: Raid detected");
+
+      // Save original @everyone permissions BEFORE modifying
+      const originalBits = everyone.permissions.bitfield;
+      lockdownGuilds.set(member.guild.id, { originalPermissions: originalBits });
+
+      // Only remove SendMessages from @everyone role
+      await everyone.setPermissions(everyone.permissions.remove(PermissionFlagsBits.SendMessages), "AutoMod: Raid detected — lockdown");
+      console.log(`[AutoMod] RAID LOCKDOWN activated for guild ${member.guild.name} (saved permissions: ${originalBits})`);
 
       await modLog(member.guild, config, logEmbed(
         "🛡️ RAID DETECTED — LOCKDOWN",
@@ -357,22 +395,31 @@ async function handleMemberJoin(member, client) {
         0xed4245
       ));
 
-      // Auto-unlock after duration
+      // Auto-unlock after duration — restore EXACT original permissions
       const duration = (config.antiRaid.lockdownDuration || 300) * 1000;
       setTimeout(async () => {
         try {
+          const saved = lockdownGuilds.get(member.guild.id);
+          if (!saved) return;
+
           const everyoneRole = member.guild.roles.everyone;
-          await everyoneRole.setPermissions(everyoneRole.permissions.add(PermissionFlagsBits.SendMessages), "AutoMod: Lockdown ended");
+          // Restore the EXACT permissions that existed before lockdown
+          await everyoneRole.setPermissions(saved.originalPermissions, "AutoMod: Lockdown ended — permissions restored");
           lockdownGuilds.delete(member.guild.id);
+          console.log(`[AutoMod] Lockdown ended for guild ${member.guild.name} — permissions restored to ${saved.originalPermissions}`);
+
           await modLog(member.guild, config, logEmbed(
             "🔓 Lockdown Ended",
-            "Server permissions restored. Monitoring continues.",
+            "Server permissions restored to their original state. Monitoring continues.",
             0x57f287
           ));
-        } catch {}
+        } catch (err) {
+          console.error("[AutoMod] Failed to restore after lockdown:", err.message);
+          lockdownGuilds.delete(member.guild.id);
+        }
       }, duration);
     } catch (err) {
-      console.error("AutoMod raid lockdown error:", err);
+      console.error("[AutoMod] Raid lockdown error:", err.message);
       lockdownGuilds.delete(member.guild.id);
     }
   }

@@ -76,11 +76,13 @@ async function handleButton(interaction, client) {
     const ranks = getRanks(guildId);
     const memberRoles = interaction.member.roles.cache;
 
-    // Find current Egyptian rank
-    const currentRank = ranks.find((r) => {
-      const role = interaction.guild.roles.cache.find((gr) => gr.name === r.name);
-      return role && memberRoles.has(role.id);
-    });
+    // Find current Egyptian rank (highest level rank the user has)
+    const currentRank = ranks
+      .filter((r) => {
+        const role = interaction.guild.roles.cache.find((gr) => gr.name === r.name);
+        return role && memberRoles.has(role.id);
+      })
+      .sort((a, b) => b.level - a.level)[0] || null;
 
     // Find linked wallet
     const walletData = settings.get(`wallet-${guildId}-${interaction.user.id}`);

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs>
+    <clipPath id="circle">
+      <circle cx="64" cy="64" r="64"/>
+    </clipPath>
+  </defs>
+  <image href="https://teal-delicate-halibut-560.mypinata.cloud/ipfs/bafybeid6hn6gpf2s2bzteyniwy5gwc3jb7g5qsqquidnnf62dusbumbzfm" x="-32" y="-32" width="192" height="192" clip-path="url(#circle)"/>
+</svg>

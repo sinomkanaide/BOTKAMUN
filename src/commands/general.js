@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require("discord.js");
 
 const definitions = [
   new SlashCommandBuilder()
@@ -28,7 +28,8 @@ const definitions = [
     .setDescription("El bot dice algo por ti")
     .addStringOption((o) =>
       o.setName("mensaje").setDescription("Mensaje").setRequired(true)
-    ),
+    )
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages),
 
   new SlashCommandBuilder()
     .setName("help")
@@ -147,8 +148,10 @@ const handlers = {
 
   async say(interaction) {
     const message = interaction.options.getString("mensaje");
+    // Sanitize @everyone and @here mentions to prevent abuse
+    const sanitized = message.replace(/@(everyone|here)/g, "@\u200B$1");
     await interaction.reply({ content: "✅ Mensaje enviado.", ephemeral: true });
-    return interaction.channel.send(message);
+    return interaction.channel.send({ content: sanitized, allowedMentions: { parse: ["users", "roles"] } });
   },
 
   async help(interaction) {

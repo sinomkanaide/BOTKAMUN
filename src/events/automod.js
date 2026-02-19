@@ -257,33 +257,12 @@ async function handleMessage(message, client) {
   const guildId = message.guild.id;
   const config = getAutomodConfig(guildId);
 
-  // DEBUG: Log every message processing (remove after confirming it works)
-  console.log(`[AutoMod:DEBUG] Message from ${message.author.tag} in guild ${guildId} | config.enabled=${config.enabled} | configKey=automod-${guildId}`);
-
-  if (!config.enabled) {
-    // Log first time only to avoid spam
-    if (!handleMessage._loggedDisabled) {
-      console.log(`[AutoMod:DEBUG] AutoMod is DISABLED for guild ${guildId}. Raw stored value:`, JSON.stringify(settings.get(`automod-${guildId}`)?.enabled));
-      handleMessage._loggedDisabled = true;
-    }
-    return;
-  }
+  if (!config.enabled) return;
 
   const member = message.member;
-  if (!member) {
-    console.log(`[AutoMod:DEBUG] member is null for ${message.author.tag} — skipping`);
-    return;
-  }
+  if (!member) return;
 
-  if (isImmune(member, config)) {
-    const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
-    const isMgr = member.permissions.has(PermissionFlagsBits.ManageGuild);
-    const hasImmuneRole = config.immuneRoleIds?.length ? member.roles.cache.some((r) => config.immuneRoleIds.includes(r.id)) : false;
-    console.log(`[AutoMod:DEBUG] ${message.author.tag} is IMMUNE — admin=${isAdmin} manageGuild=${isMgr} immuneRole=${hasImmuneRole}`);
-    return;
-  }
-
-  console.log(`[AutoMod:DEBUG] Processing filters for ${message.author.tag}: spam=${config.spamFilter?.enabled} words=${config.wordFilter?.enabled} links=${config.linkFilter?.enabled} mentions=${config.mentionSpam?.enabled} caps=${config.capsFilter?.enabled}`);
+  if (isImmune(member, config)) return;
 
   // ─── Spam Filter ───
   const spamResult = checkSpam(message, config);

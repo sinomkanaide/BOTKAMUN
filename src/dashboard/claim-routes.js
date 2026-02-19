@@ -2,6 +2,12 @@ const { ethers } = require("ethers");
 const { getClaimData, consumeClaim } = require("../events/claim");
 const { getRanks, getApiConfig, setApiConfig, getRankForLevel, setRanks } = require("../commands/egypt-roles");
 const { settings } = require("../utils/database");
+const { claimLimiter, getClientIp } = require("../utils/rate-limiter");
+
+// Validate Discord snowflake ID
+function isValidSnowflake(id) {
+  return typeof id === "string" && /^\d{17,20}$/.test(id);
+}
 
 function registerClaimRoutes(app, getClient) {
   // ─── Serve verification page ───
@@ -16,7 +22,7 @@ function registerClaimRoutes(app, getClient) {
   });
 
   // ─── Main verification endpoint ───
-  app.post("/api/claim/verify", async (req, res) => {
+  app.post("/api/claim/verify", claimLimiter.middleware(getClientIp), async (req, res) => {
     const { token, wallet, signature, message } = req.body;
     const client = getClient();
 
@@ -87,7 +93,7 @@ function registerClaimRoutes(app, getClient) {
       }
 
       console.log(`[CLAIM] Calling game API: ${url}`);
-      console.log(`[CLAIM] Headers: ${JSON.stringify(headers)}`);
+      // NOTE: Headers intentionally not logged to avoid leaking API keys
 
       const apiRes = await fetch(url, { headers });
 
@@ -239,11 +245,13 @@ function registerClaimRoutes(app, getClient) {
   const { requireAuth } = require("./auth-middleware");
 
   app.get("/api/ranks/:guildId", requireAuth, (req, res) => {
+    if (!isValidSnowflake(req.params.guildId)) return res.status(400).json({ error: "Invalid guildId" });
     const ranks = getRanks(req.params.guildId);
     res.json(ranks);
   });
 
   app.put("/api/ranks/:guildId", requireAuth, (req, res) => {
+    if (!isValidSnowflake(req.params.guildId)) return res.status(400).json({ error: "Invalid guildId" });
     const { ranks } = req.body;
     if (!Array.isArray(ranks)) return res.status(400).json({ error: "ranks must be an array" });
     setRanks(req.params.guildId, ranks);
@@ -251,6 +259,7 @@ function registerClaimRoutes(app, getClient) {
   });
 
   app.post("/api/ranks/:guildId/add", requireAuth, (req, res) => {
+    if (!isValidSnowflake(req.params.guildId)) return res.status(400).json({ error: "Invalid guildId" });
     const { level, name, color, description, roleKey } = req.body;
     const ranks = getRanks(req.params.guildId);
     ranks.push({
@@ -265,6 +274,7 @@ function registerClaimRoutes(app, getClient) {
   });
 
   app.delete("/api/ranks/:guildId/:roleKey", requireAuth, (req, res) => {
+    if (!isValidSnowflake(req.params.guildId)) return res.status(400).json({ error: "Invalid guildId" });
     let ranks = getRanks(req.params.guildId);
     ranks = ranks.filter((r) => r.roleKey !== req.params.roleKey);
     setRanks(req.params.guildId, ranks);
@@ -273,25 +283,45 @@ function registerClaimRoutes(app, getClient) {
 
   // ─── Game API config ───
   app.get("/api/gameapi/:guildId", requireAuth, (req, res) => {
+    if (!isValidSnowflake(req.params.guildId)) return res.status(400).json({ error: "Invalid guildId" });
     const config = getApiConfig(req.params.guildId);
-    res.json(config || { baseUrl: "", endpoint: "", levelField: "", apiKey: "" });
+    if (config) {
+      // Mask API key — never expose full key to frontend
+      const masked = { ...config };
+      if (masked.apiKey) {
+        masked.apiKey = masked.apiKey.slice(0, 4) + "****" + masked.apiKey.slice(-4);
+        masked.hasApiKey = true;
+      }
+      return res.json(masked);
+    }
+    res.json({ baseUrl: "", endpoint: "", levelField: "", apiKey: "", hasApiKey: false });
   });
 
   app.put("/api/gameapi/:guildId", requireAuth, (req, res) => {
+    if (!isValidSnowflake(req.params.guildId)) return res.status(400).json({ error: "Invalid guildId" });
     const { baseUrl, endpoint, levelField, apiKey } = req.body;
     if (!baseUrl || !endpoint || !levelField) {
       return res.status(400).json({ error: "baseUrl, endpoint, and levelField are required" });
     }
+
+    // If apiKey looks masked (contains ****), keep the existing one
+    const existingConfig = getApiConfig(req.params.guildId);
+    let finalApiKey = apiKey || null;
+    if (apiKey && apiKey.includes("****") && existingConfig?.apiKey) {
+      finalApiKey = existingConfig.apiKey;
+    }
+
     setApiConfig(req.params.guildId, {
       baseUrl: baseUrl.replace(/\/$/, ""),
       endpoint,
       levelField,
-      apiKey: apiKey || null,
+      apiKey: finalApiKey,
     });
     res.json({ success: true });
   });
 
   app.post("/api/gameapi/:guildId/test", requireAuth, async (req, res) => {
+    if (!isValidSnowflake(req.params.guildId)) return res.status(400).json({ error: "Invalid guildId" });
     const config = getApiConfig(req.params.guildId);
     if (!config || !config.baseUrl || !config.endpoint) {
       return res.status(400).json({ error: "Save the API config first" });
@@ -319,6 +349,7 @@ function registerClaimRoutes(app, getClient) {
 
   // ─── Linked wallets ───
   app.get("/api/wallets/:guildId", requireAuth, (req, res) => {
+    if (!isValidSnowflake(req.params.guildId)) return res.status(400).json({ error: "Invalid guildId" });
     const all = settings.getAll();
     const prefix = `wallet-${req.params.guildId}-`;
     const wallets = Object.entries(all)

@@ -4,18 +4,34 @@ const path = require("path");
 const { announcements, warnings, settings, verifications, tickets, ticketConfigs } = require("../utils/database");
 const { templates, CHANNEL_TYPES } = require("../commands/setup");
 const { ROLE_PERMISSIONS } = require("../commands/egypt-roles");
+const { loginLimiter, messageLimiter, announcementLimiter, getClientIp } = require("../utils/rate-limiter");
 
 const app = express();
+
+// Trust proxy (Railway runs behind a reverse proxy)
+app.set("trust proxy", 1);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Session para auth
+// Session config with security hardening
+const isProduction = process.env.RAILWAY_ENVIRONMENT === "production" || process.env.NODE_ENV === "production" || !!process.env.RAILWAY_PUBLIC_DOMAIN;
+
+if (!process.env.DASHBOARD_SECRET) {
+  console.warn("⚠️  DASHBOARD_SECRET not set! Using insecure fallback. Set it in environment variables.");
+}
+
 app.use(
   session({
     secret: process.env.DASHBOARD_SECRET || "bot-secret-change-me",
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 24 * 60 * 60 * 1000 }, // 24h
+    cookie: {
+      maxAge: 24 * 60 * 60 * 1000, // 24h
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "lax",
+    },
   })
 );
 
@@ -39,7 +55,7 @@ function getRedirectUri(req) {
 const { requireAuth } = require("./auth-middleware");
 
 // ─── Discord OAuth2 Routes ───
-app.get("/api/auth/discord", (req, res) => {
+app.get("/api/auth/discord", loginLimiter.middleware(getClientIp), (req, res) => {
   if (!DISCORD_CLIENT_ID || !DISCORD_CLIENT_SECRET) {
     return res.status(500).json({ error: "OAuth2 no configurado. Faltan DISCORD_CLIENT_ID o DISCORD_CLIENT_SECRET." });
   }
@@ -48,7 +64,7 @@ app.get("/api/auth/discord", (req, res) => {
   res.redirect(url);
 });
 
-app.get("/api/auth/callback", async (req, res) => {
+app.get("/api/auth/callback", loginLimiter.middleware(getClientIp), async (req, res) => {
   const { code } = req.query;
   if (!code) return res.redirect("/?error=no_code");
 
@@ -191,20 +207,49 @@ app.get("/api/guilds/:id", requireAuth, (req, res) => {
   });
 });
 
+// ─── Helper: validate Discord snowflake ID ───
+function isValidSnowflake(id) {
+  return typeof id === "string" && /^\d{17,20}$/.test(id);
+}
+
+// ─── Helper: strip dangerous mentions from user content ───
+function sanitizeMentions(text) {
+  if (!text) return text;
+  return text.replace(/@(everyone|here)/g, "@\u200B$1");
+}
+
 // ─── Announcements Routes ───
 app.get("/api/announcements", requireAuth, (req, res) => {
-  res.json(announcements.getAll());
+  const guildId = req.query.guildId;
+  const all = announcements.getAll();
+  if (guildId) {
+    const filtered = {};
+    for (const [k, v] of Object.entries(all)) {
+      if (v.guildId === guildId) filtered[k] = v;
+    }
+    return res.json(filtered);
+  }
+  res.json(all);
 });
 
-app.post("/api/announcements", requireAuth, async (req, res) => {
+app.post("/api/announcements", requireAuth, announcementLimiter.middleware((req) => req.session?.discordUser?.id || "unknown"), async (req, res) => {
   const { id, channelId, title, message, cron, color, pingRole, active, guildId } = req.body;
+
+  // Validate snowflake IDs
+  if (channelId && !isValidSnowflake(channelId)) {
+    return res.status(400).json({ error: "Invalid channelId" });
+  }
+  if (guildId && !isValidSnowflake(guildId)) {
+    return res.status(400).json({ error: "Invalid guildId" });
+  }
+
   const annId = id || require("crypto").randomUUID().slice(0, 8);
 
   const ann = {
     channelId,
     guildId: guildId || null,
-    title,
-    message,
+    title: sanitizeMentions(title),
+    message: sanitizeMentions(message),
     cron,
     color: color ? parseInt(color.replace("#", ""), 16) : 0x5865f2,
     pingRole: pingRole || null,
@@ -237,18 +282,34 @@ app.delete("/api/announcements/:id", requireAuth, (req, res) => {
 
 // ─── Warnings Routes ───
 app.get("/api/warnings", requireAuth, (req, res) => {
-  res.json(warnings.getAll());
+  const guildId = req.query.guildId;
+  const all = warnings.getAll();
+  if (guildId) {
+    const filtered = {};
+    for (const [k, v] of Object.entries(all)) {
+      // Warning keys are formatted as "guildId-userId"
+      if (k.startsWith(`${guildId}-`)) filtered[k] = v;
+    }
+    return res.json(filtered);
+  }
+  res.json(all);
 });
 
 // ─── Send Message from Dashboard ───
-app.post("/api/send-message", requireAuth, async (req, res) => {
+app.post("/api/send-message", requireAuth, messageLimiter.middleware((req) => req.session?.discordUser?.id || "unknown"), async (req, res) => {
   const { channelId, content, embed } = req.body;
+
+  // Validate channelId
+  if (!channelId || !isValidSnowflake(channelId)) {
+    return res.status(400).json({ error: "Invalid channelId" });
+  }
+
   try {
     const channel = await botClient.channels.fetch(channelId);
-    if (!channel) return res.status(404).json({ error: "Canal no encontrado" });
+    if (!channel) return res.status(404).json({ error: "Channel not found" });
 
     const msgOptions = {};
-    if (content) msgOptions.content = content;
+    if (content) msgOptions.content = sanitizeMentions(content);
     if (embed) {
       const { EmbedBuilder } = require("discord.js");
       const e = new EmbedBuilder()
@@ -528,11 +589,13 @@ app.post("/api/setup-server", requireAuth, async (req, res) => {
 
 // ─── Tickets ───
 app.get("/api/tickets/config/:guildId", requireAuth, (req, res) => {
+  if (!isValidSnowflake(req.params.guildId)) return res.status(400).json({ error: "Invalid guildId" });
   const config = ticketConfigs.get(`guild-${req.params.guildId}`);
   res.json(config || { guildId: req.params.guildId, panelChannelId: null, panelMessageId: null, ticketCounter: 0, types: [] });
 });
 
 app.post("/api/tickets/config/:guildId", requireAuth, (req, res) => {
+  if (!isValidSnowflake(req.params.guildId)) return res.status(400).json({ error: "Invalid guildId" });
   const configKey = `guild-${req.params.guildId}`;
   const existing = ticketConfigs.get(configKey) || {
     guildId: req.params.guildId,
@@ -550,6 +613,7 @@ app.post("/api/tickets/config/:guildId", requireAuth, (req, res) => {
 });
 
 app.post("/api/tickets/deploy/:guildId", requireAuth, async (req, res) => {
+  if (!isValidSnowflake(req.params.guildId)) return res.status(400).json({ error: "Invalid guildId" });
   if (!botClient) return res.status(500).json({ error: "Bot not connected" });
 
   const configKey = `guild-${req.params.guildId}`;
@@ -631,6 +695,7 @@ app.post("/api/tickets/deploy/:guildId", requireAuth, async (req, res) => {
 });
 
 app.get("/api/tickets/list/:guildId", requireAuth, (req, res) => {
+  if (!isValidSnowflake(req.params.guildId)) return res.status(400).json({ error: "Invalid guildId" });
   const all = tickets.getAll();
   const guildTickets = {};
   for (const [key, ticket] of Object.entries(all)) {
@@ -640,6 +705,7 @@ app.get("/api/tickets/list/:guildId", requireAuth, (req, res) => {
 });
 
 app.delete("/api/tickets/type/:guildId/:typeId", requireAuth, (req, res) => {
+  if (!isValidSnowflake(req.params.guildId)) return res.status(400).json({ error: "Invalid guildId" });
   const configKey = `guild-${req.params.guildId}`;
   const config = ticketConfigs.get(configKey);
   if (!config) return res.status(404).json({ error: "Config not found" });
@@ -653,11 +719,13 @@ app.delete("/api/tickets/type/:guildId/:typeId", requireAuth, (req, res) => {
 const { getAutomodConfig, setAutomodConfig, DEFAULT_AUTOMOD } = require("../events/automod");
 
 app.get("/api/automod/:guildId", requireAuth, (req, res) => {
+  if (!isValidSnowflake(req.params.guildId)) return res.status(400).json({ error: "Invalid guildId" });
   const config = getAutomodConfig(req.params.guildId);
   res.json(config);
 });
 
 app.put("/api/automod/:guildId", requireAuth, (req, res) => {
+  if (!isValidSnowflake(req.params.guildId)) return res.status(400).json({ error: "Invalid guildId" });
   console.log(`[AutoMod:SAVE] Saving config for guild ${req.params.guildId} — enabled=${req.body?.enabled}`);
   console.log(`[AutoMod:SAVE] Full config:`, JSON.stringify(req.body, null, 2));
   setAutomodConfig(req.params.guildId, req.body);
@@ -669,6 +737,7 @@ app.put("/api/automod/:guildId", requireAuth, (req, res) => {
 
 // Debug endpoint to check raw stored automod config
 app.get("/api/automod/:guildId/debug", requireAuth, (req, res) => {
+  if (!isValidSnowflake(req.params.guildId)) return res.status(400).json({ error: "Invalid guildId" });
   const raw = settings.get(`automod-${req.params.guildId}`);
   const resolved = getAutomodConfig(req.params.guildId);
   res.json({
@@ -683,6 +752,7 @@ app.get("/api/automod/:guildId/debug", requireAuth, (req, res) => {
 
 // ─── Settings ───
 app.get("/api/settings/:guildId", requireAuth, (req, res) => {
+  if (!isValidSnowflake(req.params.guildId)) return res.status(400).json({ error: "Invalid guildId" });
   const welcomeConfig = settings.get(`welcome-${req.params.guildId}`) || {};
   const verifyConfig = settings.get(`verify-${req.params.guildId}`) || {};
   res.json({ welcome: welcomeConfig, verify: verifyConfig });
